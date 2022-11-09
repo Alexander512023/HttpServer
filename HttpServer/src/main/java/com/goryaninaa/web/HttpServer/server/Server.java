@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.goryaninaa.web.HttpServer.model.HttpResponse;
-import com.goryaninaa.web.HttpServer.requesthandler.RequestHandler;
 
 public class Server {
     private int port;

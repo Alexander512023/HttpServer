@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.goryaninaa.web.HttpServer.model.HttpResponse;
+import com.goryaninaa.web.HttpServer.server.RequestHandler;
 
-public class RequestHandler {
+public class HttpRequestHandler implements RequestHandler {
 	private final Map<String, Controller> httpContext = new HashMap<>();
 	
-    public RequestHandler() {
+    public HttpRequestHandler() {
 	}
     
     public void createContext(String mapping, Controller controller) {
