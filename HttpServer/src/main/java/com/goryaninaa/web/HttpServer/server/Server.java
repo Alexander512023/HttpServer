@@ -6,9 +6,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,69 +13,62 @@ import com.goryaninaa.web.HttpServer.model.HttpResponse;
 
 public class Server {
     private int port;
-    private int threadsNumber;
+    private boolean started;
+    private ServerSocket serverSocket;
     private final ExecutorService executor;
-    private final Queue<Socket> acceptedSockets = new ConcurrentLinkedQueue<>();
     private final RequestHandler requestHandler;
 
     public Server(int port, int threadsNumber, RequestHandler requestHandler) {
         this.port = port;
         this.requestHandler = requestHandler;
-        this.threadsNumber = threadsNumber;
         this.executor = Executors.newFixedThreadPool(threadsNumber);
+        started = true;
     }
 
-    public void start() {
-        try(ServerSocket serverSocket = new ServerSocket(port)) {
-        	startExecutor();
-            while (true) {
-                acceptedSockets.add(serverSocket.accept());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void start() throws IOException {
+		this.serverSocket = new ServerSocket(port);
+		while (started) {
+			executor.submit(() -> {
+				try {
+					run(serverSocket.accept());
+				} catch (IOException e) {
+					if (started) {
+						e.printStackTrace();
+					}
+				}
+			});
+		}
+    }
+    
+    public void shutdown() throws IOException {
+    	started = false;
+    	executor.shutdownNow();
+    	serverSocket.close();
     }
 
-	private void handle() {
-    	Optional<Socket> socket = Optional.ofNullable(acceptedSockets.poll());
-    	
-    	if (socket.isPresent()) {
-			try (BufferedReader input = new BufferedReader(
-					new InputStreamReader(socket.get().getInputStream(), StandardCharsets.UTF_8));
-					PrintWriter output = new PrintWriter(socket.get().getOutputStream())) {
+	private void run(Socket socket) {
+		try (BufferedReader input = new BufferedReader(
+				new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+				PrintWriter output = new PrintWriter(socket.getOutputStream())) {
 
-				HttpResponse response = requestHandler.handle(getString(input));
-				sendResponse(response, output);
-				socket.get().close();
+			HttpResponse response = requestHandler.handle(getString(input));
+			sendResponse(response, output);
+			socket.close();
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-    	}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
-    private void startExecutor() {
-    	for (int i = 0; i < threadsNumber; i++) {
-            executor.execute(() -> {
-                while (true) {
-                    handle();
-                }
-            });
-        }
-		
-	}
-	
     private String getString(BufferedReader input) throws IOException {
-        // ждем первой строки запроса
+    	String request = "";
         while (!input.ready()) ;
 
-        // считываем и печатаем все что было отправлено клиентом
-        System.out.println();
         while (input.ready()) {
-            System.out.println(input.readLine());
+        	request = request + input.readLine();
         }
 
-        return "";
+        return request;
     }
 
     private void sendResponse(HttpResponse response, PrintWriter output) {

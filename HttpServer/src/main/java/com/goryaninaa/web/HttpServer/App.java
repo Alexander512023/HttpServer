@@ -1,13 +1,19 @@
 package com.goryaninaa.web.HttpServer;
 
+import java.io.IOException;
+
 import com.goryaninaa.web.HttpServer.requesthandler.HttpRequestHandler;
 import com.goryaninaa.web.HttpServer.server.Server;
 
 public class App {
     public static void main( String[] args ) {
-         HttpRequestHandler requestHandler = new HttpRequestHandler();
-         Server server = new Server(8080, 2, requestHandler);
+		HttpRequestHandler requestHandler = new HttpRequestHandler();
+		Server server = new Server(8080, 2, requestHandler);
 
-         server.start();
+		try {
+			server.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 }
