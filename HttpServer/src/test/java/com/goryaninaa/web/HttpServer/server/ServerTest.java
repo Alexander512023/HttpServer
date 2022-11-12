@@ -78,7 +78,6 @@ public class ServerTest {
 			try {
 				server.start();
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}).start();
 		

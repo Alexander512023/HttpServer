@@ -6,8 +6,10 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.goryaninaa.web.HttpServer.model.HttpResponse;
 
@@ -28,31 +30,35 @@ public class Server {
     public void start() throws IOException {
 		this.serverSocket = new ServerSocket(port);
 		while (started) {
+			Socket clientSocket = serverSocket.accept();
+			
 			executor.submit(() -> {
-				try {
-					run(serverSocket.accept());
-				} catch (IOException e) {
-					if (started) {
-						e.printStackTrace();
-					}
-				}
+				run(clientSocket);
 			});
 		}
     }
     
-    public void shutdown() throws IOException {
+    public void shutdown() throws IOException, InterruptedException {
     	started = false;
-    	executor.shutdownNow();
+    	executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.MINUTES);
     	serverSocket.close();
     }
 
 	private void run(Socket socket) {
+		System.out.println("New connection accepted");
 		try (BufferedReader input = new BufferedReader(
 				new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 				PrintWriter output = new PrintWriter(socket.getOutputStream())) {
-
-			HttpResponse response = requestHandler.handle(getString(input));
-			sendResponse(response, output);
+			
+			Optional<String> request = getRequest(input);
+			if (request.isPresent()) {
+				String requestString = request.get();
+				HttpResponse response = requestHandler.handle(requestString);
+				sendResponse(response, output);
+				System.out.println("Response sent");
+			}
+			
 			socket.close();
 
 		} catch (IOException e) {
@@ -60,18 +66,32 @@ public class Server {
 		}
     }
 
-    private String getString(BufferedReader input) throws IOException {
-    	String request = "";
-        while (!input.ready()) ;
-
-        while (input.ready()) {
-        	request = request + input.readLine() + "\n";
+    private Optional<String> getRequest(BufferedReader input) throws IOException {
+    	long before = System.currentTimeMillis();
+    	
+        while (!input.ready()) {
+        	long after = System.currentTimeMillis();
+        	if (after - before > 50) {
+        		System.out.println("Technical connection handled");
+            	return Optional.empty();
+        	}
         }
-
-        return request;
+        
+        return readRequest(input);
     }
 
-    private void sendResponse(HttpResponse response, PrintWriter output) {
+    private Optional<String> readRequest(BufferedReader input) throws IOException {
+    	String requestString = "";
+        while (input.ready()) {
+        	requestString = requestString + input.readLine() + "\n";
+        }
+        
+        System.out.println(requestString);
+        Optional<String> request = Optional.ofNullable(requestString);
+		return request;
+	}
+
+	private void sendResponse(HttpResponse response, PrintWriter output) {
         output.println(response.getResponseString());
         output.flush();
     }

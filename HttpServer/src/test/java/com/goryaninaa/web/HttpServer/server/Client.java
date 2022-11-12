@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 
 public class Client {
 	private String request;
-	private String response;
+	private String response = "";
 	
 	public Client() {
 	}
@@ -27,8 +27,10 @@ public class Client {
 			while (!in.ready());
 			
 			while (in.ready()) {
-				response = in.readLine();
+				response = response + in.readLine();
 			}
+			
+			response = response.trim();
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -46,9 +48,4 @@ public class Client {
 	public String getResponse() {
 		return response;
 	}
-	
-	public void setResponse(String response) {
-		this.response = response;
-	}
-	
 }
