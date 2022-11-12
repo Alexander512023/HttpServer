@@ -65,7 +65,7 @@ public class Server {
         while (!input.ready()) ;
 
         while (input.ready()) {
-        	request = request + input.readLine();
+        	request = request + input.readLine() + "\n";
         }
 
         return request;
