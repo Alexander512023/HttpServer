@@ -31,8 +31,10 @@ public class HttpRequestHandler implements RequestHandler {
 		try {
 		
 			Request httpRequest = in.httpRequestFrom(requestString);
-			Controller controller = defineControllerForSuchRequest(httpRequest);
-			optionalHttpResponse = manage(controller, httpRequest);
+			Optional<Controller> controller = defineController(httpRequest);
+			if (controller.isPresent()) {
+				optionalHttpResponse = manage(controller.get(), httpRequest);
+			}
 			
 		} catch (IllegalAccessException | InvocationTargetException | RuntimeException e) {
 			e.printStackTrace();
@@ -55,19 +57,6 @@ public class HttpRequestHandler implements RequestHandler {
     	}
     }
     
-	private Controller defineControllerForSuchRequest(Request httpRequest) {
-		Optional<Controller> optionalController = defineController(httpRequest);
-		
-		Controller controller = null;
-		if (optionalController.isPresent()) {
-			controller = optionalController.get();
-		} else {
-			throw new IllegalArgumentException("Server is not able to handle such request");
-		}
-		
-		return controller;
-	}
-
 	private Optional<Controller> defineController(Request httpRequest) {
 		Optional<Controller> controller = Optional.empty();
 

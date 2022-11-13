@@ -11,10 +11,10 @@ import com.goryaninaa.web.HttpServer.requesthandler.Response;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.RequestMapping;
 
-@RequestMapping("/")
+@RequestMapping("/test")
 public class TestController implements Controller {
 
-	@GetMapping("test")
+	@GetMapping("/1")
 	public Response test(HttpRequest request) {
 		Map<String, String> additionalHeaders = new LinkedHashMap<>(1, 0.75f, false);
 		additionalHeaders.put("Content-Type", "text/html; charset=utf-8");
