@@ -27,7 +27,7 @@ public class Client {
 			while (!in.ready());
 			
 			while (in.ready()) {
-				response = response + in.readLine();
+				response += in.readLine() + "\n";
 			}
 			
 			response = response.trim();

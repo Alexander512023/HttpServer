@@ -26,6 +26,7 @@ public class ServerTest {
 	private Client client2;
 	private Client client3;
 	private Client client4;
+	private final String SERVERBLABLA = "HTTP/1.1 200 OK\nServer: RagingServer\n\n";
 	
 
 	@Before
@@ -65,10 +66,10 @@ public class ServerTest {
 		long after = System.currentTimeMillis();
 		
 		assertTrue(after - before < 250, "Tasks worked in series");
-		assertTrue(client1.getRequest().equals(client1.getResponse()), "Client #1 get wrong response");
-		assertTrue(client2.getRequest().equals(client2.getResponse()), "Client #2 get wrong response");
-		assertTrue(client3.getRequest().equals(client3.getResponse()), "Client #3 get wrong response");
-		assertTrue(client4.getRequest().equals(client4.getResponse()), "Client #4 get wrong response");
+		assertTrue(client1.getResponse().equals(SERVERBLABLA + client1.getRequest()), "Client #1 get wrong response");
+		assertTrue(client2.getResponse().equals(SERVERBLABLA + client2.getRequest()), "Client #2 get wrong response");
+		assertTrue(client3.getResponse().equals(SERVERBLABLA + client3.getRequest()), "Client #3 get wrong response");
+		assertTrue(client4.getResponse().equals(SERVERBLABLA + client4.getRequest()), "Client #4 get wrong response");
 	}
 	
 	@Test

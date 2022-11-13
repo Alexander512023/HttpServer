@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import com.goryaninaa.web.HttpServer.model.HttpRequest;
 import com.goryaninaa.web.HttpServer.model.HttpResponse;
+import com.goryaninaa.web.HttpServer.model.HttpResponseCode;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.PatchMapping;
@@ -40,7 +41,7 @@ public class HttpRequestHandler implements RequestHandler {
 		if (optionalHttpResponse.isPresent()) {
 			return optionalHttpResponse.get();
 		} else {
-			return new HttpResponse("HTTP/1.0 404 Not Found\n");
+			return new HttpResponse(HttpResponseCode.NOTFOUND);
 		}
     }
 	

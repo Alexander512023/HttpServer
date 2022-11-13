@@ -56,7 +56,7 @@ public class Server {
 				String requestString = request.get();
 				HttpResponse response = requestHandler.handle(requestString);
 				sendResponse(response, output);
-				System.out.println("Response sent");
+				System.out.println("Response with code " + response.getCode().getCode() + " was sent");
 			}
 			
 			socket.close();
