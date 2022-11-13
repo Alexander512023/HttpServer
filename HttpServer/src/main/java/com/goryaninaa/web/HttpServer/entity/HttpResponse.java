@@ -1,10 +1,13 @@
-package com.goryaninaa.web.HttpServer.model;
+package com.goryaninaa.web.HttpServer.entity;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class HttpResponse {
+import com.goryaninaa.web.HttpServer.requesthandler.HttpResponseCode;
+import com.goryaninaa.web.HttpServer.requesthandler.Response;
+
+public class HttpResponse implements Response {
 	private HttpResponseCode httpResponseCode;
 	private Map<String, String> headers;
     private String response;

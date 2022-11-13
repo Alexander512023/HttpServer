@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ServerTest {
-	private RequestHandlerStab requestHandler;
+	private RequestHandlerStub requestHandler;
 	private Server server;
 	private ExecutorService executor;
 	private Client client1;
@@ -31,7 +31,7 @@ public class ServerTest {
 
 	@Before
 	public void init() {
-		this.requestHandler = new RequestHandlerStab();
+		this.requestHandler = new RequestHandlerStub();
 		this.server = new Server(8000, 4, requestHandler);
 		this.executor = Executors.newFixedThreadPool(4);
 		this.client1 = new Client();

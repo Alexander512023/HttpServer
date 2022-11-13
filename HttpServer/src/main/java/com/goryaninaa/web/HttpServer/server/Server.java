@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.goryaninaa.web.HttpServer.model.HttpResponse;
+import com.goryaninaa.web.HttpServer.requesthandler.Response;
 
 public class Server {
     private int port;
@@ -54,7 +54,7 @@ public class Server {
 			Optional<String> request = getRequest(input);
 			if (request.isPresent()) {
 				String requestString = request.get();
-				HttpResponse response = requestHandler.handle(requestString);
+				Response response = requestHandler.handle(requestString);
 				sendResponse(response, output);
 				System.out.println("Response with code " + response.getCode().getCode() + " was sent");
 			}
@@ -91,7 +91,7 @@ public class Server {
 		return request;
 	}
 
-	private void sendResponse(HttpResponse response, PrintWriter output) {
+	private void sendResponse(Response response, PrintWriter output) {
         output.println(response.getResponseString());
         output.flush();
     }

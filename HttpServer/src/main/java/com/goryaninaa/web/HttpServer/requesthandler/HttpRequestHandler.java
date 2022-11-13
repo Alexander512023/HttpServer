@@ -7,9 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import com.goryaninaa.web.HttpServer.model.HttpRequest;
-import com.goryaninaa.web.HttpServer.model.HttpResponse;
-import com.goryaninaa.web.HttpServer.model.HttpResponseCode;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.PatchMapping;
@@ -20,28 +17,32 @@ import com.goryaninaa.web.HttpServer.server.RequestHandler;
 
 public class HttpRequestHandler implements RequestHandler {
 	private final Map<String, Controller> controllers = new HashMap<>();
+	private final In in;
+	private final Out out;
 	
-    public HttpRequestHandler() {
+    public HttpRequestHandler(In in, Out out) {
+    	this.in = in;
+    	this.out = out;
 	}
 
-	public HttpResponse handle(String request) {
-		Optional<HttpResponse> optionalHttpResponse = Optional.empty();
+	public Response handle(String requestString) {
+		Optional<Response> optionalHttpResponse = Optional.empty();
 		
 		try {
 		
-			HttpRequest httpRequest = new HttpRequest(request);
+			Request httpRequest = in.httpRequestFrom(requestString);
 			Controller controller = defineControllerForSuchRequest(httpRequest);
 			optionalHttpResponse = manage(controller, httpRequest);
 			
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (IllegalAccessException | InvocationTargetException | RuntimeException e) {
 			e.printStackTrace();
-//			return new HttpResponse("HTTP/1.0 404 Not Found\n");TODO
+			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
 		}
 		
 		if (optionalHttpResponse.isPresent()) {
 			return optionalHttpResponse.get();
 		} else {
-			return new HttpResponse(HttpResponseCode.NOTFOUND);
+			return out.httpResponseFrom(HttpResponseCode.NOTFOUND);
 		}
     }
 	
@@ -54,7 +55,7 @@ public class HttpRequestHandler implements RequestHandler {
     	}
     }
     
-	private Controller defineControllerForSuchRequest(HttpRequest httpRequest) {
+	private Controller defineControllerForSuchRequest(Request httpRequest) {
 		Optional<Controller> optionalController = defineController(httpRequest);
 		
 		Controller controller = null;
@@ -67,14 +68,15 @@ public class HttpRequestHandler implements RequestHandler {
 		return controller;
 	}
 
-	private Optional<Controller> defineController(HttpRequest httpRequest) {
+	private Optional<Controller> defineController(Request httpRequest) {
 		Optional<Controller> controller = Optional.empty();
 
 		for (Entry<String, Controller> controllerDefiner : controllers.entrySet()) {
-			String controllerMapping = controllerDefiner.getKey();
-
-			if (httpRequest.getConttrollerMapping(controllerMapping.length()).isPresent() && httpRequest
-					.getConttrollerMapping(controllerMapping.length()).get().equals(controllerDefiner.getKey())) {
+			int mappingLength = controllerDefiner.getKey().length();
+			Optional<String> requestConttrollerMapping = httpRequest.getConttrollerMapping(mappingLength);
+			
+			if (requestConttrollerMapping.isPresent()
+					&& requestConttrollerMapping.get().equals(controllerDefiner.getKey())) {
 				controller = Optional.ofNullable(controllerDefiner.getValue());
 				break;
 			}
@@ -83,7 +85,7 @@ public class HttpRequestHandler implements RequestHandler {
 		return controller;
 	}
 
-	private Optional<HttpResponse> manage(Controller controller, HttpRequest httpRequest)
+	private Optional<Response> manage(Controller controller, Request httpRequest)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Method[] methods = controller.getClass().getDeclaredMethods();
 		Optional<Method> handlerMethod = Optional.empty();
@@ -98,17 +100,17 @@ public class HttpRequestHandler implements RequestHandler {
 			}
 		}
 		
-		Optional<HttpResponse> httpResponse = Optional.empty();
+		Optional<Response> httpResponse = Optional.empty();
 		
 		if (handlerMethod.isPresent()) {
-			httpResponse = Optional.ofNullable((HttpResponse) handlerMethod.get().invoke(controller, httpRequest));
+			httpResponse = Optional.ofNullable((Response) handlerMethod.get().invoke(controller, httpRequest));
 		}
 		
 		return httpResponse;
 	}
 
 	@SuppressWarnings("preview")
-	private String defineMethodMapping(Method method, HttpRequest httpRequest) {
+	private String defineMethodMapping(Method method, Request httpRequest) {
 		switch (httpRequest.getMethod()) {
 			case GET: 
 				return method.getAnnotation(GetMapping.class).value();

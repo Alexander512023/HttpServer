@@ -1,4 +1,4 @@
-package com.goryaninaa.web.HttpServer.model;
+package com.goryaninaa.web.HttpServer.entity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,9 +6,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.web.HttpServer.requesthandler.Request;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
 
-public class HttpRequest {
+public class HttpRequest implements Request {
     private final String request;
     private HttpMethod method;
     private String mapping;

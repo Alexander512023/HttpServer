@@ -1,4 +1,4 @@
-package com.goryaninaa.web.HttpServer.model;
+package com.goryaninaa.web.HttpServer.entity;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
