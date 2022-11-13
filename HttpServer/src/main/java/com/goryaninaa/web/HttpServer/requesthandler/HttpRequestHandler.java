@@ -9,6 +9,12 @@ import java.util.Optional;
 
 import com.goryaninaa.web.HttpServer.model.HttpRequest;
 import com.goryaninaa.web.HttpServer.model.HttpResponse;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.PatchMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.PostMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.PutMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.RequestMapping;
 import com.goryaninaa.web.HttpServer.server.RequestHandler;
 
 public class HttpRequestHandler implements RequestHandler {
@@ -16,7 +22,7 @@ public class HttpRequestHandler implements RequestHandler {
 	
     public HttpRequestHandler() {
 	}
-    
+
 	public HttpResponse handle(String request) {
 		Optional<HttpResponse> optionalHttpResponse = Optional.empty();
 		
@@ -28,7 +34,7 @@ public class HttpRequestHandler implements RequestHandler {
 			
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
-			return new HttpResponse("HTTP/1.0 404 Not Found\n");
+//			return new HttpResponse("HTTP/1.0 404 Not Found\n");TODO
 		}
 		
 		if (optionalHttpResponse.isPresent()) {
@@ -48,7 +54,7 @@ public class HttpRequestHandler implements RequestHandler {
     }
     
 	private Controller defineControllerForSuchRequest(HttpRequest httpRequest) {
-		Optional<Controller> optionalController = defineOptionalController(httpRequest);
+		Optional<Controller> optionalController = defineController(httpRequest);
 		
 		Controller controller = null;
 		if (optionalController.isPresent()) {
@@ -60,20 +66,20 @@ public class HttpRequestHandler implements RequestHandler {
 		return controller;
 	}
 
-	private Optional<Controller> defineOptionalController(HttpRequest httpRequest) {
-		Optional<Controller> controllerOptional = Optional.empty();
+	private Optional<Controller> defineController(HttpRequest httpRequest) {
+		Optional<Controller> controller = Optional.empty();
 
 		for (Entry<String, Controller> controllerDefiner : controllers.entrySet()) {
 			String controllerMapping = controllerDefiner.getKey();
 
 			if (httpRequest.getConttrollerMapping(controllerMapping.length()).isPresent() && httpRequest
 					.getConttrollerMapping(controllerMapping.length()).get().equals(controllerDefiner.getKey())) {
-				controllerOptional = Optional.ofNullable(controllerDefiner.getValue());
+				controller = Optional.ofNullable(controllerDefiner.getValue());
 				break;
 			}
 		}
 		
-		return controllerOptional;
+		return controller;
 	}
 
 	private Optional<HttpResponse> manage(Controller controller, HttpRequest httpRequest)
@@ -83,8 +89,7 @@ public class HttpRequestHandler implements RequestHandler {
 		int controllerMappingLength = controller.getClass().getAnnotation(RequestMapping.class).value().length();
 		
 		for (Method method : methods) {
-			//TODO
-			String methodMapping = method.getAnnotation(GetMapping.class).value();
+			String methodMapping = defineMethodMapping(method, httpRequest);
 			String requestMethodMapping = httpRequest.getMapping().substring(controllerMappingLength);
 			
 			if (methodMapping.equals(requestMethodMapping)) {
@@ -99,5 +104,23 @@ public class HttpRequestHandler implements RequestHandler {
 		}
 		
 		return httpResponse;
+	}
+
+	@SuppressWarnings("preview")
+	private String defineMethodMapping(Method method, HttpRequest httpRequest) {
+		switch (httpRequest.getMethod()) {
+			case GET: 
+				return method.getAnnotation(GetMapping.class).value();
+			case POST:
+				return method.getAnnotation(PostMapping.class).value();
+			case PUT: 
+				return method.getAnnotation(PutMapping.class).value();
+			case PATCH:
+				return method.getAnnotation(PatchMapping.class).value();
+			case DELETE: 
+				return method.getAnnotation(DeleteMapping.class).value();
+			case default:
+				return "";
+		}
 	}
 }

@@ -6,9 +6,11 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
+
 public class HttpRequest {
     private final String request;
-    private String method;
+    private HttpMethod method;
     private String mapping;
     private Map<String, String> parameters = new HashMap<>();
     private Map<String, String> headers = new HashMap<>();
@@ -27,7 +29,7 @@ public class HttpRequest {
 		return mapping;
 	}
 
-	public String getMethod() {
+	public HttpMethod getMethod() {
 		return method;
 	}
 
@@ -57,7 +59,19 @@ public class HttpRequest {
 		Matcher matcher = pattern.matcher(request);
 		
 		if (matcher.find()) {
-			this.method = request.substring(0, matcher.end()).trim();
+			String methodString = request.substring(0, matcher.end()).trim();
+			
+			if (methodString.equals("GET")) {
+				this.method = HttpMethod.GET;
+			} else if (methodString.equals("POST")) {
+				this.method = HttpMethod.POST;
+			} else if (methodString.equals("PUT")) {
+				this.method = HttpMethod.PUT;
+			} else if (methodString.equals("PATCH")) {
+				this.method = HttpMethod.PATCH;
+			} else if (methodString.equals("DELETE")) {
+				this.method = HttpMethod.DELETE;
+			}
 		} else {
 			throw new IllegalArgumentException("Unsupported http request method");
 		}

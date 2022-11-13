@@ -2,6 +2,8 @@ package com.goryaninaa.web.HttpServer.requesthandler;
 
 import com.goryaninaa.web.HttpServer.model.HttpRequest;
 import com.goryaninaa.web.HttpServer.model.HttpResponse;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.RequestMapping;
 
 @RequestMapping("/")
 public class TestController implements Controller {
