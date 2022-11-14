@@ -14,13 +14,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ServerTest {
 	private RequestHandlerStub requestHandler;
-	private Server server;
 	private ExecutorService executor;
 	private Client client1;
 	private Client client2;
@@ -29,10 +28,9 @@ public class ServerTest {
 	private final String SERVERBLABLA = "HTTP/1.1 200 OK\nServer: RagingServer\n\n";
 	
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.requestHandler = new RequestHandlerStub();
-		this.server = new Server(8000, 4, requestHandler);
 		this.executor = Executors.newFixedThreadPool(4);
 		this.client1 = new Client();
 		this.client2 = new Client();
@@ -40,14 +38,14 @@ public class ServerTest {
 		this.client4 = new Client();
 	}
 	
-	@After
+	@AfterEach
 	public void finalize() throws IOException, InterruptedException {
-		Thread.sleep(5);
-		server.shutdown();
+		
 	}
 	
 	@Test
-	public void serverShouldCorrectlyHandleFourClientSimultaneously() throws InterruptedException {
+	public void serverShouldCorrectlyHandleFourClientSimultaneously() throws InterruptedException, IOException {
+		Server server = new Server(8000, 4, requestHandler);
 		new Thread(() -> {
 			try {
 				server.start();
@@ -65,6 +63,9 @@ public class ServerTest {
 		while (!(future1.isDone() && future2.isDone() && future3.isDone() && future4.isDone()));
 		long after = System.currentTimeMillis();
 		
+		Thread.sleep(5);
+		server.shutdown();
+		
 		assertTrue(after - before < 250, "Tasks worked in series");
 		assertTrue(client1.getResponse().equals(SERVERBLABLA + client1.getRequest()), "Client #1 get wrong response");
 		assertTrue(client2.getResponse().equals(SERVERBLABLA + client2.getRequest()), "Client #2 get wrong response");
@@ -73,8 +74,8 @@ public class ServerTest {
 	}
 	
 	@Test
-	public void serverShouldShutdownCorrectly() throws InterruptedException {
-		Thread.sleep(5);
+	public void serverShouldShutdownCorrectly() throws InterruptedException, IOException {
+		Server server = new Server(8001, 4, requestHandler);
 		new Thread(() -> {
 			try {
 				server.start();
@@ -85,11 +86,8 @@ public class ServerTest {
 		Thread.sleep(5);
 		Future<?> future = executor.submit(() -> client1.go("test"));
 		
-		try {
-			server.shutdown();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Thread.sleep(25);
+		server.shutdown();
 		
 		try {
 			future.get(250, TimeUnit.MILLISECONDS);

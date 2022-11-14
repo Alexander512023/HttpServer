@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
+
 class HttpRequestTest {
 	private String request;
 	
@@ -27,21 +29,30 @@ class HttpRequestTest {
 	void httpRequestShouldDefineMethodOnCreation() {
 		HttpRequest httpRequest = new HttpRequest(request);
 		
-		assertEquals("POST", httpRequest.getMethod(), "Method is not defined correctly");
+		HttpMethod expected = HttpMethod.POST;
+		HttpMethod fact = httpRequest.getMethod();
+		
+		assertEquals(expected, fact, "Method is not defined correctly");
 	}
 	
 	@Test
 	void httpRequestShouldDefineMappingOnCreation() {
 		HttpRequest httpRequest = new HttpRequest(request);
 		
-		assertEquals("/cgi-bin/process.cgi", httpRequest.getMapping(), "Mapping is not defined correctly");
+		String expected = "/cgi-bin/process.cgi";
+		String fact = httpRequest.getMapping();
+		
+		assertEquals(expected, fact, "Mapping is not defined correctly");
 	}
 	
 	@Test
 	void httpRequestShouldDefineBodyOnCreation() {
 		HttpRequest httpRequest = new HttpRequest(request);
 		
-		assertEquals("licenseID=string&content=string&/paramsXML=string", httpRequest.getBody().get(), "Body is not defined correctly");
+		String expected = "licenseID=string&content=string&/paramsXML=string";
+		String fact = httpRequest.getBody().get();
+		
+		assertEquals(expected, fact, "Body is not defined correctly");
 	}
 
 	@Test

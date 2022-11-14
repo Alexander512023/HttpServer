@@ -98,7 +98,6 @@ public class HttpRequestHandler implements RequestHandler {
 		return httpResponse;
 	}
 
-	@SuppressWarnings("preview")
 	private String defineMethodMapping(Method method, Request httpRequest) {
 		switch (httpRequest.getMethod()) {
 			case GET: 
@@ -111,8 +110,8 @@ public class HttpRequestHandler implements RequestHandler {
 				return method.getAnnotation(PatchMapping.class).value();
 			case DELETE: 
 				return method.getAnnotation(DeleteMapping.class).value();
-			case default:
-				return "";
 		}
+		
+		return null;
 	}
 }
