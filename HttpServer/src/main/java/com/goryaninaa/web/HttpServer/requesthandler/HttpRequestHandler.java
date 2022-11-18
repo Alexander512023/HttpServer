@@ -1,5 +1,6 @@
 package com.goryaninaa.web.HttpServer.requesthandler;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -7,8 +8,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import com.goryaninaa.web.HttpServer.parser.JsonFormatException;
+import com.goryaninaa.web.HttpServer.parser.JsonParser;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
+import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.PatchMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.PostMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.PutMapping;
@@ -36,7 +40,8 @@ public class HttpRequestHandler implements RequestHandler {
 				optionalHttpResponse = manage(controller.get(), httpRequest);
 			}
 			
-		} catch (IllegalAccessException | InvocationTargetException | RuntimeException e) {
+		} catch (IllegalAccessException | InvocationTargetException | RuntimeException | NoSuchMethodException
+				| InstantiationException | NoSuchFieldException | ClassNotFoundException | JsonFormatException e) {
 			e.printStackTrace();
 			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
 		}
@@ -74,16 +79,17 @@ public class HttpRequestHandler implements RequestHandler {
 		return controller;
 	}
 
-	private Optional<Response> manage(Controller controller, Request httpRequest)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	private Optional<Response> manage(Controller controller, Request httpRequest) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException,
+			InstantiationException, NoSuchFieldException, ClassNotFoundException, JsonFormatException {
 		Method[] methods = controller.getClass().getDeclaredMethods();
 		Optional<Method> handlerMethod = Optional.empty();
 		int controllerMappingLength = controller.getClass().getAnnotation(RequestMapping.class).value().length();
 		
 		for (Method method : methods) {
-			String methodMapping = defineMethodMapping(method, httpRequest);
+			String methodMapping = defineMethodMappingIfHttpMethodMatch(method, httpRequest);
 			String requestMethodMapping = httpRequest.getMapping().substring(controllerMappingLength);
-			
+
 			if (methodMapping.equals(requestMethodMapping)) {
 				handlerMethod = Optional.ofNullable(method);
 			}
@@ -92,26 +98,44 @@ public class HttpRequestHandler implements RequestHandler {
 		Optional<Response> httpResponse = Optional.empty();
 		
 		if (handlerMethod.isPresent()) {
-			httpResponse = Optional.ofNullable((Response) handlerMethod.get().invoke(controller, httpRequest));
+			httpResponse = invokeMethod(handlerMethod.get(), controller, httpRequest); 
 		}
 		
 		return httpResponse;
 	}
 
-	private String defineMethodMapping(Method method, Request httpRequest) {
-		switch (httpRequest.getMethod()) {
-			case GET: 
+
+	private Optional<Response> invokeMethod(Method method, Controller controller, Request httpRequest)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException,
+			SecurityException, InstantiationException, NoSuchFieldException, ClassNotFoundException,
+			JsonFormatException {
+		if (method.getParameterCount() > 1) {
+			Class<?> clazz = method.getParameterTypes()[1];
+			
+			JsonParser<?> parser = new JsonParser<>(clazz, httpRequest.getBody().get());
+			Object argument = parser.deserialize();
+			
+			return Optional.ofNullable((Response) method.invoke(controller, httpRequest, argument));
+		} else {
+			return Optional.ofNullable((Response) method.invoke(controller, httpRequest));
+		}
+	}
+
+	private String defineMethodMappingIfHttpMethodMatch(Method method, Request httpRequest) {
+		for (Annotation annotation : method.getAnnotations()) {
+			if (annotation.annotationType().equals(GetMapping.class) && httpRequest.getMethod().equals(HttpMethod.GET)) {
 				return method.getAnnotation(GetMapping.class).value();
-			case POST:
+			} else if (annotation.annotationType().equals(PostMapping.class) && httpRequest.getMethod().equals(HttpMethod.POST)) {
 				return method.getAnnotation(PostMapping.class).value();
-			case PUT: 
+			} else if (annotation.annotationType().equals(PutMapping.class) && httpRequest.getMethod().equals(HttpMethod.PUT)) {
 				return method.getAnnotation(PutMapping.class).value();
-			case PATCH:
+			} else if (annotation.annotationType().equals(PatchMapping.class) && httpRequest.getMethod().equals(HttpMethod.PATCH)) {
 				return method.getAnnotation(PatchMapping.class).value();
-			case DELETE: 
+			} else if (annotation.annotationType().equals(DeleteMapping.class) && httpRequest.getMethod().equals(HttpMethod.DELETE)) {
 				return method.getAnnotation(DeleteMapping.class).value();
+			}
 		}
 		
-		return null;
+		return "";
 	}
 }

@@ -31,4 +31,10 @@ public class RequestStub implements Request {
 		return HttpMethod.GET;
 	}
 
+	@Override
+	public Optional<String> getBody() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

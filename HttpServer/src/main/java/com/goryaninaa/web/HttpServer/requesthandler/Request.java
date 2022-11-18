@@ -11,5 +11,7 @@ public interface Request {
 	String getMapping();
 
 	HttpMethod getMethod();
+	
+	Optional<String> getBody();
 
 }
