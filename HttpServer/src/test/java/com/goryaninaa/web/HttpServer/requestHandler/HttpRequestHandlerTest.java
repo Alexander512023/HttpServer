@@ -12,7 +12,7 @@ class HttpRequestHandlerTest {
 	
 	@BeforeAll
 	static void init() {
-		httpRequestHandler = new HttpRequestHandler(new InStub(), new OutStub());
+		httpRequestHandler = new HttpRequestHandler(new InStub(), new OutStub(), new ParserStub());
 		httpRequestHandler.addController(new ControllerStub());
 	}
 

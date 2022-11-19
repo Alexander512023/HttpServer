@@ -1,4 +1,4 @@
-package com.goryaninaa.web.HttpServer.parser;
+package com.goryaninaa.web.HttpServer.json.parser;
 
 public class JsonFormatException extends Exception {
 

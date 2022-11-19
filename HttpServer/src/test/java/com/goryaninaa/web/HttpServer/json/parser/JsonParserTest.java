@@ -1,4 +1,4 @@
-package com.goryaninaa.web.HttpServer.parser;
+package com.goryaninaa.web.HttpServer.json.parser;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,30 +11,20 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.goryaninaa.web.RestAPIConsumer.Reqres.Person;
-import com.goryaninaa.web.RestAPIConsumer.Reqres.ReqresListUsers;
-import com.goryaninaa.web.RestAPIConsumer.Reqres.Support;
-
 public class JsonParserTest {
 
-	String correctReqresListUsersJson;
-	String correctPersonJson;
-	String incorrectDataJson;
-	String emptyStringJson = "";
-	JsonParser<ReqresListUsers> correctReqresListUsersJsonParser;
-	JsonParser<Person> correctPersonJsonParser;
-	JsonParser<Person> incorrectDataJsonParser;
-	JsonParser<Person> emptyJsonParser;
+	private String correctReqresListUsersJson;
+	private String correctPersonJson;
+	private String incorrectDataJson;
+	private String emptyStringJson = "";
+	private JsonParser parser = new JsonParser();
+	
 	
 	@Before
 	public void init() {
 		createCorrectReqresListUsersJson();
 		createCorrectPersonJson();
 		createIncorrectDataJson();
-		correctReqresListUsersJsonParser 	= new JsonParser<>(ReqresListUsers.class, correctReqresListUsersJson);
-		correctPersonJsonParser 			= new JsonParser<>(Person.class, correctPersonJson);
-		incorrectDataJsonParser 			= new JsonParser<>(Person.class, incorrectDataJson);
-		emptyJsonParser 					= new JsonParser<>(Person.class, emptyStringJson);
 	}
 	
 	@Test
@@ -55,7 +45,7 @@ public class JsonParserTest {
 				"To keep ReqRes free, contributions towards server costs are appreciated!");
 		
 		ReqresListUsers reqresListUsersConstructor = new ReqresListUsers(2, 6, 12, 2, dataList, support);
-		ReqresListUsers reqresListUsersCorrectJson = correctReqresListUsersJsonParser.deserialize();
+		ReqresListUsers reqresListUsersCorrectJson = parser.deserialize(ReqresListUsers.class, correctReqresListUsersJson);
 		
 		assertTrue(reqresListUsersCorrectJson.equals(reqresListUsersConstructor));
 	}
@@ -64,7 +54,7 @@ public class JsonParserTest {
 	@Test
 	public void testDeserialize() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException, NoSuchFieldException, ClassNotFoundException, JsonFormatException {
 		Person personConstructor = new Person(7, "michael.lawson@reqres.in", "Michael", "Lawson", "https://reqres.in/img/faces/7-image.jpg");
-		Person personCorrectJson = correctPersonJsonParser.deserialize();
+		Person personCorrectJson = parser.deserialize(Person.class, correctPersonJson);
 		
 		assertTrue(personCorrectJson.equals(personConstructor));
 	}
@@ -72,7 +62,7 @@ public class JsonParserTest {
 	@Test
 	public void testDeserializeCheckIncorrect() {
 		Exception exceptionIncorrect = assertThrows(JsonFormatException.class, () -> {
-			incorrectDataJsonParser.deserialize();
+			parser.deserialize(Person.class, incorrectDataJson);
 		});
 		
 		String expectedMessage = "Deserializing JSON incorrect format";
@@ -84,7 +74,7 @@ public class JsonParserTest {
 	@Test
 	public void testDeserializeCheckEmpty() {
 		Exception exceptionIncorrect = assertThrows(NullPointerException.class, () -> {
-			emptyJsonParser.deserialize();
+			parser.deserialize(Person.class, emptyStringJson);
 		});
 		
 		String expectedMessage = "Empty JSON string";

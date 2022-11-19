@@ -24,19 +24,6 @@ public class HttpRequest implements Request {
         defineParameters();
         defineHeaders();
         defineBody();
-        System.out.println("POST /test/1 HTTP/1.1\r\n"
-        		+ "Content-Type: application/json\r\n"
-        		+ "User-Agent: PostmanRuntime/7.29.2\r\n"
-        		+ "Accept: */*\r\n"
-        		+ "Postman-Token: 672a3c09-5ef1-43f5-835c-0a26609724a9\r\n"
-        		+ "Host: localhost:8080\r\n"
-        		+ "Accept-Encoding: gzip, deflate, br\r\n"
-        		+ "Connection: keep-alive\r\n"
-        		+ "Content-Length: 24\r\n"
-        		+ "\r\n"
-        		+ "{\r\n"
-        		+ "    \"name\": \"Sensor\"\r\n"
-        		+ "}");
     }
 
     

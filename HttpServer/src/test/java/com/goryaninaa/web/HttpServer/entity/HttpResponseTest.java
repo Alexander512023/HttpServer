@@ -47,7 +47,7 @@ class HttpResponseTest {
 		
 		String body = "<p>Hello!</p>";
 		
-		HttpResponse httpResponse = new HttpResponse(HttpResponseCode.NOTFOUND, headers, body);
+		HttpResponse httpResponse = new HttpResponse(HttpResponseCode.NOTFOUND, body);
 		
 		String fact = httpResponse.getResponseString();
 		String expected = "HTTP/1.1 404 Not Found\n"

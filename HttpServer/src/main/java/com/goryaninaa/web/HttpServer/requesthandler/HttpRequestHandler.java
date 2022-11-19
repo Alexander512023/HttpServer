@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import com.goryaninaa.web.HttpServer.parser.JsonFormatException;
-import com.goryaninaa.web.HttpServer.parser.JsonParser;
+import com.goryaninaa.web.HttpServer.json.parser.JsonFormatException;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
@@ -23,21 +22,23 @@ public class HttpRequestHandler implements RequestHandler {
 	private final Map<String, Controller> controllers = new HashMap<>();
 	private final In in;
 	private final Out out;
+	private final Parser parser;
 	
-    public HttpRequestHandler(In in, Out out) {
+    public HttpRequestHandler(In in, Out out, Parser parser) {
     	this.in = in;
     	this.out = out;
+    	this.parser = parser;
 	}
 
 	public Response handle(String requestString) {
-		Optional<Response> optionalHttpResponse = Optional.empty();
+		Optional<Response> httpResponse = Optional.empty();
 		
 		try {
 		
 			Request httpRequest = in.httpRequestFrom(requestString);
 			Optional<Controller> controller = defineController(httpRequest);
 			if (controller.isPresent()) {
-				optionalHttpResponse = manage(controller.get(), httpRequest);
+				httpResponse = manage(controller.get(), httpRequest);
 			}
 			
 		} catch (IllegalAccessException | InvocationTargetException | RuntimeException | NoSuchMethodException
@@ -46,8 +47,8 @@ public class HttpRequestHandler implements RequestHandler {
 			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
 		}
 		
-		if (optionalHttpResponse.isPresent()) {
-			return optionalHttpResponse.get();
+		if (httpResponse.isPresent()) {
+			return httpResponse.get();
 		} else {
 			return out.httpResponseFrom(HttpResponseCode.NOTFOUND);
 		}
@@ -112,8 +113,7 @@ public class HttpRequestHandler implements RequestHandler {
 		if (method.getParameterCount() > 1) {
 			Class<?> clazz = method.getParameterTypes()[1];
 			
-			JsonParser<?> parser = new JsonParser<>(clazz, httpRequest.getBody().get());
-			Object argument = parser.deserialize();
+			Object argument = parser.deserialize(clazz, httpRequest.getBody().get());
 			
 			return Optional.ofNullable((Response) method.invoke(controller, httpRequest, argument));
 		} else {

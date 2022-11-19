@@ -1,4 +1,4 @@
-package com.goryaninaa.web.HttpServer.parser;
+package com.goryaninaa.web.HttpServer.json.parser;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,26 +11,22 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class JsonParser<T> {
+import com.goryaninaa.web.HttpServer.requesthandler.Parser;
 
-	private Class<T> clazz;
-	private String jsonToParse;
-	
-	public JsonParser(Class<T> clazz, String jsonToParse) {
-		super();
-		this.clazz = clazz;
-		this.jsonToParse = jsonToParse;
+public class JsonParser implements Parser {
+
+	public JsonParser() {
 	}
 	
-	public T deserialize()
+	public <T> T deserialize(Class<T> clazz, String jsonToParse)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, InstantiationException,
 			NoSuchFieldException, ClassNotFoundException, JsonFormatException {
 		
-		checkJson();
+		checkJson(jsonToParse);
 		jsonToParse = preHandleJson(jsonToParse);
 		
-		return createInstance();
+		return createInstance(clazz, jsonToParse);
 	}
 	
 	private String preHandleJson(String json) {
@@ -45,7 +41,7 @@ public class JsonParser<T> {
 		return json;
 	}
 
-	private void checkJson() throws JsonFormatException {
+	private void checkJson(String jsonToParse) throws JsonFormatException {
 		Pattern patternCounter = Pattern.compile("\".+?\".*?:\\s*.?");
 		Matcher matcherCounter = patternCounter.matcher(jsonToParse);
 		int counter = 0;
@@ -66,37 +62,37 @@ public class JsonParser<T> {
 		}
 	}
 	
-	private T createInstance()
+	private <T> T createInstance(Class<T> clazz, String jsonToParse)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, InstantiationException,
 			NoSuchFieldException, ClassNotFoundException {
 		
-		Map<String, Object> keyValueListMap = parseJsonToMapWithList();
+		Map<String, Object> keyValueListMap = parseJsonToMapWithList(clazz, jsonToParse);
 		Map<String, Object> methodArgumentMap = transformToMethodArgumentMapWithList(keyValueListMap, clazz);
 		
-		T instance = initializeTargetObject(clazz.getDeclaredConstructor().newInstance(), methodArgumentMap);
+		T instance = initializeTargetObject(clazz, clazz.getDeclaredConstructor().newInstance(), methodArgumentMap);
 		
 		return instance;
 	}
 	
-	private Map<String, Object> parseJsonToMapWithList()
+	private <T> Map<String, Object> parseJsonToMapWithList(Class<T> clazz, String jsonToParse)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, InstantiationException,
 			NoSuchFieldException, ClassNotFoundException {
 		
-		Map<String, String> keyListStringMap = collectListsFromJsonToMap();
+		Map<String, String> keyListStringMap = collectListsFromJsonToMap(jsonToParse);
 		
-		replaceListsWithKeysInJson();
+		jsonToParse = replaceListsWithKeysInJson(jsonToParse);
 		
-		Map<String, String> keyObjectFieldsStringMap = collectObjectFieldsFromJsonToMap();
+		Map<String, String> keyObjectFieldsStringMap = collectObjectFieldsFromJsonToMap(jsonToParse);
 		
-		replaceObjectsWithKeysInJson();
+		jsonToParse = replaceObjectsWithKeysInJson(jsonToParse);
 		
 		Map<String, String> keyValueMap = parseJsonToMap(jsonToParse);
 		
-		Map<String, List<Object>> keyListObjectMap = convertToListsOfObjectsMap(keyListStringMap, keyValueMap);
+		Map<String, List<Object>> keyListObjectMap = convertToListsOfObjectsMap(clazz, keyListStringMap, keyValueMap);
 		
-		Map<String, Object> keyObjectFieldMap = convertToObjectsFieldsMap(keyObjectFieldsStringMap, keyValueMap);
+		Map<String, Object> keyObjectFieldMap = convertToObjectsFieldsMap(clazz, keyObjectFieldsStringMap, keyValueMap);
 		
 		Map<String, Object> keyValueListMap = joinKeyValueWithList(keyValueMap, keyListObjectMap, keyObjectFieldMap);
 		
@@ -127,7 +123,7 @@ public class JsonParser<T> {
 		return keyValueListMap;
 	}
 
-	private Map<String, List<Object>> convertToListsOfObjectsMap(Map<String, String> keyListStringMap,
+	private <T> Map<String, List<Object>> convertToListsOfObjectsMap(Class<T> clazz, Map<String, String> keyListStringMap,
 			Map<String, String> keyValueMap) 
 					throws NoSuchMethodException, SecurityException, IllegalAccessException,
 					IllegalArgumentException, InvocationTargetException, InstantiationException,
@@ -149,7 +145,7 @@ public class JsonParser<T> {
 						.map(e -> e.getKey())
 						.findAny()
 						.get();
-				objectsList.add(createInstanceOfObjectInList(objectString, field));
+				objectsList.add(createInstanceOfObjectInList(clazz, objectString, field));
 			}
 			keyListObjectMap.put(key, objectsList);
 		}
@@ -157,7 +153,7 @@ public class JsonParser<T> {
 	}
 	
 	//TODO
-	private Map<String, Object> convertToObjectsFieldsMap(Map<String, String> keyObjectFieldsStringMap,
+	private <T> Map<String, Object> convertToObjectsFieldsMap(Class<T> clazz, Map<String, String> keyObjectFieldsStringMap,
 			Map<String, String> keyValueMap) 
 					throws NoSuchMethodException, SecurityException, IllegalAccessException,
 					IllegalArgumentException, InvocationTargetException, InstantiationException,
@@ -171,13 +167,13 @@ public class JsonParser<T> {
 			String field = keyValueMap.entrySet().stream().filter(e -> e.getValue().equals(key)).map(e -> e.getKey())
 					.findAny().get();
 			
-			Object fieldObject = createInstanceOfObjectField(json, field);
+			Object fieldObject = createInstanceOfObjectField(clazz, json, field);
 			keyObjectFieldMap.put(key, fieldObject);
 		}
 		return keyObjectFieldMap;
 	}
 
-	private Object createInstanceOfObjectField(String json, String field)
+	private <T> T createInstanceOfObjectField(Class<T> clazz, String json, String field)
 			throws NoSuchFieldException, SecurityException, InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
 
@@ -190,12 +186,13 @@ public class JsonParser<T> {
 		Object newInstance = Class.forName(className).getDeclaredConstructor().newInstance();
 		Map<String, Object> methodArgumentMap = transformToMethodArgumentMap(keyValueMap, newInstance.getClass());
 		
-		Object instance = initializeTargetObjectRaw(newInstance, methodArgumentMap);
+		@SuppressWarnings("unchecked")
+		T instance = (T) initializeTargetObjectRaw(newInstance, methodArgumentMap);
 		
 		return instance;
 	}
 
-	private Object createInstanceOfObjectInList(String json, String field)
+	private <T> T createInstanceOfObjectInList(Class<T> clazz, String json, String field)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, InstantiationException,
 			NoSuchFieldException, ClassNotFoundException {
@@ -213,7 +210,8 @@ public class JsonParser<T> {
 		Object newInstance = Class.forName(className).getDeclaredConstructor().newInstance();
 		Map<String, Object> methodArgumentMap = transformToMethodArgumentMap(keyValueMap, newInstance.getClass());
 		
-		Object instance = initializeTargetObjectRaw(newInstance, methodArgumentMap);
+		@SuppressWarnings("unchecked")
+		T instance = (T) initializeTargetObjectRaw(newInstance, methodArgumentMap);
 		
 		return instance;
 	}
@@ -269,7 +267,7 @@ public class JsonParser<T> {
 		return methodArgumentMap;
 	}
 	
-	private T initializeTargetObject(T target, Map<String, Object> setMethodNameValueMap)
+	private <T> T initializeTargetObject(Class<T> clazz, T target, Map<String, Object> setMethodNameValueMap)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException {
 		
@@ -282,11 +280,11 @@ public class JsonParser<T> {
 		return target;
 	}
 	
-	private Object initializeTargetObjectRaw(Object target, Map<String, Object> setMethodNameValueMap)
+	private <T> T initializeTargetObjectRaw(T target, Map<String, T> setMethodNameValueMap)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException {
 		
-		for (Entry<String, Object> entry: setMethodNameValueMap.entrySet()) {
+		for (Entry<String, T> entry: setMethodNameValueMap.entrySet()) {
 					target.getClass()
 						.getDeclaredMethod(entry.getKey(), getSetMethodParameterTypeByFieldName( entry.getKey(), target.getClass() ))
 						.invoke(target, entry.getValue().getClass().cast(entry.getValue()));
@@ -310,7 +308,7 @@ public class JsonParser<T> {
         return parameterTypes[0];
 	}
 	
-	private Map<String, String> collectObjectFieldsFromJsonToMap() {
+	private Map<String, String> collectObjectFieldsFromJsonToMap(String jsonToParse) {
 		Map<String, String> keyListObjectMap = new HashMap<>();
 		Pattern pattern = Pattern.compile("(?s)\\{.*?\\}");
 		Matcher matcher = pattern.matcher(jsonToParse);
@@ -325,7 +323,7 @@ public class JsonParser<T> {
 		return keyListObjectMap;
 	}
 	
-	private void replaceObjectsWithKeysInJson() {
+	private String replaceObjectsWithKeysInJson(String jsonToParse) {
 		Pattern pattern = Pattern.compile("(?s)\\{.*?\\}");
 		Matcher matcher = pattern.matcher(jsonToParse);
 		int counter = 1;
@@ -335,13 +333,15 @@ public class JsonParser<T> {
 			
 			jsonToParse = jsonToParse.replaceFirst("(?s)\\{.*?\\}", key);
 		}
+		
+		return jsonToParse;
 	}
 	
 	private String generateKeyForObject(int counter) {
 		return "|{" + counter + "}|";
 	}
 
-	private Map<String, String> collectListsFromJsonToMap() {
+	private Map<String, String> collectListsFromJsonToMap(String jsonToParse) {
 		Map<String, String> keyListStringMap = new HashMap<>();
 		Pattern pattern = Pattern.compile("(?s)\\[.*?\\]");
 		Matcher matcher = pattern.matcher(jsonToParse);
@@ -356,7 +356,7 @@ public class JsonParser<T> {
 		return keyListStringMap;
 	}
 	
-	private void replaceListsWithKeysInJson() {
+	private String replaceListsWithKeysInJson(String jsonToParse) {
 		Pattern pattern = Pattern.compile("(?s)\\[.*?\\]");
 		Matcher matcher = pattern.matcher(jsonToParse);
 		int counter = 1;
@@ -366,6 +366,8 @@ public class JsonParser<T> {
 			
 			jsonToParse = jsonToParse.replaceFirst("(?s)\\[.*?\\]", key);
 		}
+		
+		return jsonToParse;
 	}
 
 	private String generateKeyForList(int counter) {

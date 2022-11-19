@@ -1,9 +1,8 @@
 package com.goryaninaa.web.HttpServer.entity;
 
-import java.util.Map;
-
 import com.goryaninaa.web.HttpServer.requesthandler.HttpResponseCode;
 import com.goryaninaa.web.HttpServer.requesthandler.Out;
+import com.goryaninaa.web.HttpServer.requesthandler.Response;
 
 public class OutgoingResponse implements Out {
 
@@ -18,9 +17,8 @@ public class OutgoingResponse implements Out {
 	}
 
 	@Override
-	public HttpResponse httpResponseFrom(HttpResponseCode httpResponseCode, Map<String, String> additionalHeaders,
-			String body) {
-		return new HttpResponse(httpResponseCode, additionalHeaders, body);
+	public <T> Response httpResponseFrom(HttpResponseCode httpResponseCode, T responseObject) {
+		return new <T> HttpResponse(httpResponseCode, responseObject);
 	}
 
 }

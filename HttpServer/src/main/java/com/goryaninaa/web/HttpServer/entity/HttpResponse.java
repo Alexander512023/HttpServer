@@ -1,9 +1,12 @@
 package com.goryaninaa.web.HttpServer.entity;
 
+import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.goryaninaa.web.HttpServer.json.serializer.JsonSerializer;
 import com.goryaninaa.web.HttpServer.requesthandler.HttpResponseCode;
 import com.goryaninaa.web.HttpServer.requesthandler.Response;
 
@@ -11,22 +14,28 @@ public class HttpResponse implements Response {
 	private HttpResponseCode httpResponseCode;
 	private Map<String, String> headers;
     private String response;
+    private Serializer serializer = new JsonSerializer();
 
     public HttpResponse(HttpResponseCode httpResponseCode) {
     	this.httpResponseCode = httpResponseCode;
+    	defineHeaders();
+    	
     	response = this.httpResponseCode.getStartLine();
     }
     
     public HttpResponse(HttpResponseCode httpResponseCode, String body) {
     	this.httpResponseCode = httpResponseCode;
-    	defineHeaders();
+    	defineHeaders(body);
     	
         this.response = combine(httpResponseCode, body);
     }
     
-    public HttpResponse(HttpResponseCode httpResponseCode, Map<String, String> additionalHeaders, String body) {
+
+
+	public <T> HttpResponse(HttpResponseCode httpResponseCode, T responseObject) {
     	this.httpResponseCode = httpResponseCode;
-    	defineHeaders(additionalHeaders);
+    	String body = serializer.serialize(responseObject);
+    	defineHeaders(responseObject, body);
     	
         this.response = combine(httpResponseCode, body);
     }
@@ -51,16 +60,34 @@ public class HttpResponse implements Response {
 		return response;
 	}
     
+    private void defineHeaders(String body) {
+    	defineHeaders();
+    	
+    	headers.put("Content-Type", "text/html; charset=utf-8");
+    	try {
+			headers.put("Content-Length", String.valueOf(body.getBytes("UTF-8").length));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Unsupported encoding");
+		}
+	}
+    
+	private <T> void defineHeaders(T responseObject, String body) {
+		defineHeaders();
+		
+		headers.put("Content-Type", "application/json");
+		try {
+			headers.put("Content-Length", String.valueOf(body.getBytes("UTF-8").length));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Unsupported encoding");
+		}
+	}
+    
     private void defineHeaders() {
     	headers = new LinkedHashMap<String, String>(15, 0.75f, false);
     	headers.put("Server", "RagingServer");
-    }
-    
-    private void defineHeaders(Map<String, String> additionalHeaders) {
-    	defineHeaders();
-    	
-    	for (Entry<String, String> additionalHeader : additionalHeaders.entrySet()) {
-    		headers.put(additionalHeader.getKey(), additionalHeader.getValue());
-    	}
+    	headers.put("Connection", "close");
+    	headers.put("Date", LocalDateTime.now().toString());
     }
 }
