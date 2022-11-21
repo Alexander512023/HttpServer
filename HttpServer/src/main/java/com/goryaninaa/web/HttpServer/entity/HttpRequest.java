@@ -1,16 +1,21 @@
 package com.goryaninaa.web.HttpServer.entity;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.web.HttpServer.json.parser.JsonFormatException;
+import com.goryaninaa.web.HttpServer.json.parser.JsonParser;
+import com.goryaninaa.web.HttpServer.requesthandler.Parser;
 import com.goryaninaa.web.HttpServer.requesthandler.Request;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
 
 public class HttpRequest implements Request {
     private final String request;
+    private final Parser parser = new JsonParser();
     private HttpMethod method;
     private String mapping;
     private Map<String, String> parameters = new HashMap<>();
@@ -54,6 +59,24 @@ public class HttpRequest implements Request {
 
 	public Optional<String> getBody() {
 		return Optional.ofNullable(body);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> Optional<T> getJsonObject(T object) {
+		Optional<T> jsonObject = Optional.empty();
+		
+		if (headers.containsKey("Content-Type") && headers.get("Content-Type").equals("application/json")) {
+			try {
+				jsonObject = (Optional<T>) Optional.ofNullable(parser.deserialize(object.getClass(), body));
+			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | InstantiationException | NoSuchFieldException | ClassNotFoundException
+					| JsonFormatException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Json parsing faild");
+			}
+		}
+		
+		return jsonObject;
 	}
 
 	private void defineMethod() {

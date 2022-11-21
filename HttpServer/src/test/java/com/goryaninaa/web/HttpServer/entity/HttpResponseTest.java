@@ -2,8 +2,8 @@ package com.goryaninaa.web.HttpServer.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,38 +27,47 @@ class HttpResponseTest {
 		
 		HttpResponse httpResponse = new HttpResponse(HttpResponseCode.NOTFOUND, body);
 		
-		String fact = httpResponse.getResponseString();
+		Pattern pattern = Pattern.compile("Date:.*\\n");
+		
+		String factWithDate = httpResponse.getResponseString();
+		Matcher matcher = pattern.matcher(factWithDate);
+		matcher.find();
+		
+		String factWithoutDate = factWithDate.substring(0, matcher.start()) + factWithDate.substring(matcher.end());
+		
 		String expected = "HTTP/1.1 404 Not Found\n"
 				+ "Server: RagingServer\n"
+				+ "Connection: close\n"
+				+ "Content-Type: text/html; charset=utf-8\n"
+				+ "Content-Length: 13\n"
 				+ "\n"
 				+ "<p>Hello!</p>";
 		
-		assertEquals(expected, fact);
+		assertEquals(expected, factWithoutDate);
 	}
 	
 	@Test
-	void httpResponseShouldCorrectlyFormWith3Arg() {
-		Map<String, String> headers = new LinkedHashMap<>(4, 0.75f, false);
+	void httpResponseShouldCorrectlyFormWithJson() {
+		PersonStub person = new PersonStub("Alex");
 		
-		headers.put("Date", "Sun, 18 Oct 2012 10:36:20 GMT");
-		headers.put("Content-Length", "230");
-		headers.put("Connection", "Closed");
-		headers.put("Content-Type", "text/html; charset=iso-8859-1");
+		HttpResponse httpResponse = new HttpResponse(HttpResponseCode.OK, person);
 		
-		String body = "<p>Hello!</p>";
+		Pattern pattern = Pattern.compile("Date:.*\\n");
 		
-		HttpResponse httpResponse = new HttpResponse(HttpResponseCode.NOTFOUND, body);
+		String factWithDate = httpResponse.getResponseString();
+		Matcher matcher = pattern.matcher(factWithDate);
+		matcher.find();
 		
-		String fact = httpResponse.getResponseString();
-		String expected = "HTTP/1.1 404 Not Found\n"
+		String factWithoutDate = factWithDate.substring(0, matcher.start()) + factWithDate.substring(matcher.end());
+		
+		String expected = "HTTP/1.1 200 OK\n"
 				+ "Server: RagingServer\n"
-				+ "Date: Sun, 18 Oct 2012 10:36:20 GMT\n"
-				+ "Content-Length: 230\n"
-				+ "Connection: Closed\n"
-				+ "Content-Type: text/html; charset=iso-8859-1\n"
+				+ "Connection: close\n"
+				+ "Content-Type: application/json\n"
+				+ "Content-Length: 16\n"
 				+ "\n"
-				+ "<p>Hello!</p>";
+				+ "{\"name\": \"Alex\"}";
 		
-		assertEquals(expected, fact);
+		assertEquals(expected, factWithoutDate);
 	}
 }

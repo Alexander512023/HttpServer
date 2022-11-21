@@ -28,14 +28,20 @@ public class Server {
         started = true;
     }
 
-    public void start() throws IOException {
-		this.serverSocket = new ServerSocket(port);
-		while (started) {
-			Socket clientSocket = serverSocket.accept();
-			
-			executor.submit(() -> {
-				run(clientSocket);
-			});
+    public void start() {
+		try {
+			this.serverSocket = new ServerSocket(port);
+
+			while (started) {
+				Socket clientSocket = serverSocket.accept();
+
+				executor.submit(() -> {
+					run(clientSocket);
+				});
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Server start failed");
 		}
     }
     

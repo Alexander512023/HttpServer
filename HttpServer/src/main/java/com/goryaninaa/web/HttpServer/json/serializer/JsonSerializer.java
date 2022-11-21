@@ -59,29 +59,19 @@ public class JsonSerializer implements Serializer {
 
 	public <T> String getFieldValue(T object, String name, Type type) {
 		String fieldValue = "";
-		
+
 		try {
 			String methodName = defineMethodName(name, type);
+			Method getter = object.getClass().getDeclaredMethod(methodName, new Class<?>[0]);
 
 			if (type.equals(int.class) || type.equals(double.class) || type.equals(Boolean.class)) {
-				Method getter = object.getClass().getDeclaredMethod(methodName, new Class<?>[0]);
-				String value = String.valueOf(getter.invoke(object, new Object[0]));
-
-				fieldValue = value;
+				fieldValue = valueOfPrimitive(object, getter);
 			} else if (type.equals(String.class)) {
-				Method getter = object.getClass().getDeclaredMethod(methodName, new Class<?>[0]);
-
-				fieldValue = "\"" + String.valueOf(getter.invoke(object, new Object[0])) + "\"";
+				fieldValue = valueOfString(object, getter);
 			} else if (type.equals(List.class)) {
-				Method getter = object.getClass().getDeclaredMethod(methodName, new Class<?>[0]);
-				List<?> fieldList = (List<?>) getter.invoke(object, new Object[0]);
-
-				fieldValue = wrap(fieldList);
+				fieldValue = valueOfList(object, getter);
 			} else {
-				Method getter = object.getClass().getDeclaredMethod(methodName, new Class<?>[0]);
-				Object fieldObject = getter.invoke(object, new Object[0]);
-
-				fieldValue = getStringRepresentation(fieldObject);
+				fieldValue = valueOfObject(object, getter);
 			}
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
@@ -89,6 +79,38 @@ public class JsonSerializer implements Serializer {
 			throw new RuntimeException("Serialization failed");
 		}
 		return fieldValue;
+	}
+
+	private <T> String valueOfObject(T object, Method getter)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Object fieldObject = getter.invoke(object, new Object[0]);
+
+		if (fieldObject != null) {
+			return getStringRepresentation(fieldObject);
+		} else {
+			return "null";
+		}
+	}
+
+	private <T> String valueOfList(T object, Method getter)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		List<?> fieldList = (List<?>) getter.invoke(object, new Object[0]);
+
+		if (fieldList != null) {
+			return wrap(fieldList);
+		} else {
+			return "null";
+		}
+	}
+
+	private <T> String valueOfString(T object, Method getter)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		return "\"" + String.valueOf(getter.invoke(object, new Object[0])) + "\"";
+	}
+
+	private <T> String valueOfPrimitive(T object, Method getter)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		return String.valueOf(getter.invoke(object, new Object[0]));
 	}
 
 	private String defineMethodName(String name, Type type) {
@@ -130,5 +152,4 @@ public class JsonSerializer implements Serializer {
 
 		return stringRepresentation;
 	}
-
 }

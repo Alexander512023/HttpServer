@@ -13,6 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,8 +27,6 @@ public class ServerTest {
 	private Client client2;
 	private Client client3;
 	private Client client4;
-	private final String SERVERBLABLA = "HTTP/1.1 200 OK\nServer: RagingServer\n\n";
-	
 
 	@BeforeEach
 	public void init() {
@@ -47,11 +47,7 @@ public class ServerTest {
 	public void serverShouldCorrectlyHandleFourClientSimultaneously() throws InterruptedException, IOException {
 		Server server = new Server(8000, 4, requestHandler);
 		new Thread(() -> {
-			try {
-				server.start();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			server.start();
 		}).start();
 		
 		long before = System.currentTimeMillis();
@@ -66,21 +62,26 @@ public class ServerTest {
 		Thread.sleep(5);
 		server.shutdown();
 		
+		Pattern pattern = Pattern.compile("\\n\\n");
+		Matcher matcher1 = pattern.matcher(client1.getResponse());
+		Matcher matcher2 = pattern.matcher(client2.getResponse());
+		Matcher matcher3 = pattern.matcher(client3.getResponse());
+		Matcher matcher4 = pattern.matcher(client4.getResponse());
+		
+		matcher1.find(); matcher2.find(); matcher3.find(); matcher4.find();
+		
 		assertTrue(after - before < 250, "Tasks worked in series");
-		assertTrue(client1.getResponse().equals(SERVERBLABLA + client1.getRequest()), "Client #1 get wrong response");
-		assertTrue(client2.getResponse().equals(SERVERBLABLA + client2.getRequest()), "Client #2 get wrong response");
-		assertTrue(client3.getResponse().equals(SERVERBLABLA + client3.getRequest()), "Client #3 get wrong response");
-		assertTrue(client4.getResponse().equals(SERVERBLABLA + client4.getRequest()), "Client #4 get wrong response");
+		assertTrue(client1.getResponse().substring(matcher1.end()).equals(client1.getRequest()), "Client #1 get wrong response");
+		assertTrue(client2.getResponse().substring(matcher1.end()).equals(client2.getRequest()), "Client #2 get wrong response");
+		assertTrue(client3.getResponse().substring(matcher1.end()).equals(client3.getRequest()), "Client #3 get wrong response");
+		assertTrue(client4.getResponse().substring(matcher1.end()).equals(client4.getRequest()), "Client #4 get wrong response");
 	}
 	
 	@Test
 	public void serverShouldShutdownCorrectly() throws InterruptedException, IOException {
 		Server server = new Server(8001, 4, requestHandler);
 		new Thread(() -> {
-			try {
-				server.start();
-			} catch (IOException e) {
-			}
+			server.start();
 		}).start();
 		
 		Thread.sleep(5);
