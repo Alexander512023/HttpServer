@@ -30,7 +30,6 @@ public class HttpRequest implements Request {
         defineHeaders();
         defineBody();
     }
-
     
 	public String getMapping() {
 		return mapping;
@@ -64,8 +63,8 @@ public class HttpRequest implements Request {
 	@SuppressWarnings("unchecked")
 	public <T> Optional<T> getJsonObject(T object) {
 		Optional<T> jsonObject = Optional.empty();
-		
-		if (headers.containsKey("Content-Type") && headers.get("Content-Type").equals("application/json")) {
+		if (headers.containsKey("Content-Type") && headers.get("Content-Type").equals("application/json")
+				|| !method.equals(HttpMethod.GET)) {
 			try {
 				jsonObject = (Optional<T>) Optional.ofNullable(deserializer.deserialize(object.getClass(), body));
 			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
@@ -75,17 +74,14 @@ public class HttpRequest implements Request {
 				throw new RuntimeException("Json parsing faild");
 			}
 		}
-		
 		return jsonObject;
 	}
 
 	private void defineMethod() {
 		Pattern pattern = Pattern.compile("(GET|POST|PUT|PATCH|DELETE)\\s");
 		Matcher matcher = pattern.matcher(request);
-		
 		if (matcher.find()) {
 			String methodString = request.substring(0, matcher.end()).trim();
-			
 			if (methodString.equals("GET")) {
 				this.method = HttpMethod.GET;
 			} else if (methodString.equals("POST")) {
@@ -105,10 +101,8 @@ public class HttpRequest implements Request {
 	private void defineMapping() {
 		Pattern patternWParams = Pattern.compile("\\/.*?\\?");
 		Matcher matcherWParams = patternWParams.matcher(request);
-		
 		Pattern patternWNoParams = Pattern.compile("\\/.*?\\s");
 		Matcher matcherWNoParams = patternWNoParams.matcher(request);
-		
 		if (matcherWParams.find()) {
 			this.mapping = request.substring(matcherWParams.start(), matcherWParams.end() - 1).trim();
 		} else if (matcherWNoParams.find()){
@@ -120,7 +114,6 @@ public class HttpRequest implements Request {
 
 	private void defineParameters() {
 		Optional<String> parametersString = Optional.ofNullable(cutParametersString());
-		
 		if (parametersString.isPresent()) {
 			String[] lines = parametersString.get().split("&");
 
@@ -133,7 +126,6 @@ public class HttpRequest implements Request {
 	private String cutParametersString() {
 		Pattern pattern = Pattern.compile("\\?.+?\\s");
 		Matcher matcher = pattern.matcher(request);
-		
 		if (matcher.find()) {
 			return request.substring(matcher.start() + 1, matcher.end()).trim();
 		} else {
@@ -143,7 +135,6 @@ public class HttpRequest implements Request {
 
 	private void defineHeaders() {
 		Optional<String> headersString = Optional.ofNullable(cutHeadersString());
-		
 		if (headersString.isPresent()) {
 			String[] lines = headersString.get().split("\\n");
 
@@ -156,7 +147,6 @@ public class HttpRequest implements Request {
 	private String cutHeadersString() {
 		Pattern pattern = Pattern.compile("(?s)\\n.*\\n\\n");
 		Matcher matcher = pattern.matcher(request);
-		
 		if (matcher.find()) {
 			return request.substring(matcher.start(), matcher.end()).trim();
 		} else {
@@ -167,7 +157,6 @@ public class HttpRequest implements Request {
 	private void defineBody() {
 		Pattern pattern = Pattern.compile("\\n\\n");
 		Matcher matcher = pattern.matcher(request);
-		
 		if (matcher.find()) {
 			this.body = request.substring(matcher.end()).trim();
 		}

@@ -3,10 +3,6 @@ package com.goryaninaa.web.HttpServer.json.deserializer;
 import java.util.List;
 import java.util.Objects;
 
-import com.goryaninaa.web.HttpServer.json.deserializer.Person;
-import com.goryaninaa.web.HttpServer.json.deserializer.ReqresListUsers;
-import com.goryaninaa.web.HttpServer.json.deserializer.Support;
-
 public class ReqresListUsers {
 	private int page;
 	private int perPage;

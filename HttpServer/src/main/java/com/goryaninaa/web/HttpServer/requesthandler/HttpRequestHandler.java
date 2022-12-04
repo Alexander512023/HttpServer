@@ -32,21 +32,16 @@ public class HttpRequestHandler implements RequestHandler {
 
 	public Response handle(String requestString) {
 		Optional<Response> httpResponse = Optional.empty();
-		
 		try {
-		
 			Request httpRequest = in.httpRequestFrom(requestString);
 			Optional<Controller> controller = defineController(httpRequest);
 			if (controller.isPresent()) {
 				httpResponse = manage(controller.get(), httpRequest);
 			}
-			
-		} catch (IllegalAccessException | InvocationTargetException | RuntimeException | NoSuchMethodException
-				| InstantiationException | NoSuchFieldException | ClassNotFoundException e) {
+		} catch (RuntimeException e) {
 			e.printStackTrace();
 			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
 		}
-		
 		if (httpResponse.isPresent()) {
 			return httpResponse.get();
 		} else {
@@ -65,59 +60,52 @@ public class HttpRequestHandler implements RequestHandler {
     
 	private Optional<Controller> defineController(Request httpRequest) {
 		Optional<Controller> controller = Optional.empty();
-
 		for (Entry<String, Controller> controllerDefiner : controllers.entrySet()) {
 			int mappingLength = controllerDefiner.getKey().length();
 			Optional<String> requestConttrollerMapping = httpRequest.getConttrollerMapping(mappingLength);
-			
 			if (requestConttrollerMapping.isPresent()
 					&& requestConttrollerMapping.get().equals(controllerDefiner.getKey())) {
 				controller = Optional.ofNullable(controllerDefiner.getValue());
 				break;
 			}
 		}
-		
 		return controller;
 	}
 
-	private Optional<Response> manage(Controller controller, Request httpRequest) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException,
-			InstantiationException, NoSuchFieldException, ClassNotFoundException, JsonFormatException {
+	private Optional<Response> manage(Controller controller, Request httpRequest) {
 		Method[] methods = controller.getClass().getDeclaredMethods();
 		Optional<Method> handlerMethod = Optional.empty();
 		int controllerMappingLength = controller.getClass().getAnnotation(RequestMapping.class).value().length();
-		
 		for (Method method : methods) {
 			String methodMapping = defineMethodMappingIfHttpMethodMatch(method, httpRequest);
 			String requestMethodMapping = httpRequest.getMapping().substring(controllerMappingLength);
-
 			if (methodMapping.equals(requestMethodMapping)) {
 				handlerMethod = Optional.ofNullable(method);
 			}
 		}
-		
 		Optional<Response> httpResponse = Optional.empty();
-		
 		if (handlerMethod.isPresent()) {
-			httpResponse = invokeMethod(handlerMethod.get(), controller, httpRequest); 
+			httpResponse = invokeMethod(handlerMethod.get(), controller, httpRequest);
 		}
-		
 		return httpResponse;
 	}
 
 
-	private Optional<Response> invokeMethod(Method method, Controller controller, Request httpRequest)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException,
-			SecurityException, InstantiationException, NoSuchFieldException, ClassNotFoundException,
-			JsonFormatException {
-		if (method.getParameterCount() > 1) {
-			Class<?> clazz = method.getParameterTypes()[1];
-			
-			Object argument = deserializer.deserialize(clazz, httpRequest.getBody().get());
-			
-			return Optional.ofNullable((Response) method.invoke(controller, httpRequest, argument));
-		} else {
-			return Optional.ofNullable((Response) method.invoke(controller, httpRequest));
+	private Optional<Response> invokeMethod(Method method, Controller controller, Request httpRequest) {
+		try {
+			if (method.getParameterCount() > 1) {
+				Class<?> clazz = method.getParameterTypes()[1];
+				Object argument;
+				argument = deserializer.deserialize(clazz, httpRequest.getBody().get());
+				return Optional.ofNullable((Response) method.invoke(controller, httpRequest, argument));
+			} else {
+				return Optional.ofNullable((Response) method.invoke(controller, httpRequest));
+			}
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException | InstantiationException | NoSuchFieldException | ClassNotFoundException
+				| JsonFormatException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Failed to handle request");
 		}
 	}
 
@@ -135,7 +123,6 @@ public class HttpRequestHandler implements RequestHandler {
 				return method.getAnnotation(DeleteMapping.class).value();
 			}
 		}
-		
 		return "";
 	}
 }

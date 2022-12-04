@@ -20,7 +20,6 @@ public class JsonSerializer implements Serializer {
 	public <T> String serialize(T responseObject) {
 		String body;
 		body = getStringRepresentation(responseObject);
-
 		return body;
 	}
 
@@ -30,7 +29,6 @@ public class JsonSerializer implements Serializer {
 		} else {
 			Map<String, Type> fieldTypeMap = collectFieldTypeMap(object.getClass());
 			Map<String, String> fieldValueMap = collectFieldValueMap(object, fieldTypeMap);
-			
 			return wrap(fieldValueMap);
 		}
 	}
@@ -38,39 +36,30 @@ public class JsonSerializer implements Serializer {
 	private <T> Map<String, Type> collectFieldTypeMap(Class<? extends T> clazz) {
 		Map<String, Type> fieldTypeMap = new LinkedHashMap<>(15, 0.75f, false);
 		Field[] fields = clazz.getDeclaredFields();
-
 		for (Field field : fields) {
 			String name = field.getName();
 			Type type = field.getType();
-
 			fieldTypeMap.put(name, type);
 		}
-
 		return fieldTypeMap;
 	}
 
 	private <T> Map<String, String> collectFieldValueMap(T object, Map<String, Type> fieldTypeMap) {
 		Map<String, String> fieldValueMap = new LinkedHashMap<>(15, 0.75f, false);
-
 		for (Entry<String, Type> fieldType : fieldTypeMap.entrySet()) {
 			String name = fieldType.getKey();
 			Type type = fieldType.getValue();
-
 			String value = getFieldValue(object, name, type);
-
 			fieldValueMap.put(name, value);
 		}
-
 		return fieldValueMap;
 	}
 
 	public <T> String getFieldValue(T object, String name, Type type) {
 		String fieldValue = "";
-
 		try {
 			String methodName = defineMethodName(name, type);
 			Method getter = object.getClass().getDeclaredMethod(methodName, new Class<?>[0]);
-
 			if (type.equals(int.class) || type.equals(double.class) || type.equals(Boolean.class)) {
 				fieldValue = valueOfPrimitive(object, getter);
 			} else if (type.equals(String.class) || type.equals(LocalDate.class) || type.equals(Date.class)
@@ -81,7 +70,6 @@ public class JsonSerializer implements Serializer {
 			} else {
 				fieldValue = valueOfObject(object, getter);
 			}
-
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			e.printStackTrace();
@@ -93,7 +81,6 @@ public class JsonSerializer implements Serializer {
 	private <T> String valueOfObject(T object, Method getter)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Object fieldObject = getter.invoke(object, new Object[0]);
-
 		if (fieldObject != null) {
 			return getStringRepresentation(fieldObject);
 		} else {
@@ -104,7 +91,6 @@ public class JsonSerializer implements Serializer {
 	private <T> String valueOfList(T object, Method getter)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		List<?> fieldList = (List<?>) getter.invoke(object, new Object[0]);
-
 		if (fieldList != null) {
 			return wrap(fieldList);
 		} else {
@@ -115,7 +101,6 @@ public class JsonSerializer implements Serializer {
 	private <T> String valueOfString(T object, Method getter)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String value = String.valueOf(getter.invoke(object, new Object[0]));
-		
 		if (value.equals("null")) {
 			return "null";
 		} else {
@@ -138,22 +123,17 @@ public class JsonSerializer implements Serializer {
 
 	private String wrap(Map<String, String> fieldValueMap) {
 		String stringRepresentation = "{";
-
 		for (Entry<String, String> fieldValue : fieldValueMap.entrySet()) {
 			stringRepresentation += "\"" + fieldValue.getKey() + "\": " + fieldValue.getValue() + ",";
 		}
-
 		stringRepresentation = stringRepresentation.substring(0, stringRepresentation.length() - 1) + "}";
-
 		return stringRepresentation;
 	}
 
 	private <T> String wrap(List<T> fieldList) {
 		String stringRepresentation = "[";
-
 		for (T value : fieldList) {
 			Type valueType = value.getClass();
-
 			if (valueType.equals(int.class) || valueType.equals(double.class) || valueType.equals(Boolean.class)) {
 				stringRepresentation += value + ",";
 			} else if (valueType.equals(String.class)) {
@@ -162,9 +142,7 @@ public class JsonSerializer implements Serializer {
 				stringRepresentation += getStringRepresentation(value) + ",";
 			}
 		}
-
 		stringRepresentation = stringRepresentation.substring(0, stringRepresentation.length() - 1) + "]";
-
 		return stringRepresentation;
 	}
 }

@@ -11,12 +11,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.goryaninaa.web.HttpServer.json.deserializer.JsonDeserializer;
-import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
-import com.goryaninaa.web.HttpServer.json.deserializer.Person;
-import com.goryaninaa.web.HttpServer.json.deserializer.ReqresListUsers;
-import com.goryaninaa.web.HttpServer.json.deserializer.Support;
-
 public class JsonDeserializerTest {
 
 	private String correctReqresListUsersJson;

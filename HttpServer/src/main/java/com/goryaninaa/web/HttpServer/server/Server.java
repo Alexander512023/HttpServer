@@ -31,10 +31,8 @@ public class Server {
     public void start() {
 		try {
 			this.serverSocket = new ServerSocket(port);
-
 			while (started) {
 				Socket clientSocket = serverSocket.accept();
-
 				executor.submit(() -> {
 					run(clientSocket);
 				});
@@ -59,7 +57,6 @@ public class Server {
 		System.out.println("New connection accepted");
 		try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 				PrintWriter output = new PrintWriter(socket.getOutputStream())) {
-			
 			Optional<String> request = getRequest(input);
 			if (request.isPresent()) {
 				String requestString = request.get();
@@ -67,9 +64,7 @@ public class Server {
 				sendResponse(response, output);
 				System.out.println("Response with code " + response.getCode().getCode() + " was sent");
 			}
-			
 			socket.close();
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -77,7 +72,6 @@ public class Server {
 
     private Optional<String> getRequest(BufferedReader input) throws IOException {
 			long before = System.currentTimeMillis();
-
 			while (!input.ready()) {
 				long after = System.currentTimeMillis();
 				if (after - before > 50) {
@@ -91,16 +85,13 @@ public class Server {
     private Optional<String> readRequest(BufferedReader input) throws IOException {
 			String requestString = "";
 			int contentLength = 0;
-
 			Pattern patternBodyLength = Pattern.compile("Content-Length");
 			Pattern patternHeadersEnd = Pattern.compile("^$");
 			while (input.ready()) {
 				String currentLine = input.readLine();
 				requestString = requestString + currentLine + "\n";
-				
 				Matcher matcherBodyLength = patternBodyLength.matcher(currentLine);
 				Matcher matcherHeadersEnd = patternHeadersEnd.matcher(currentLine);
-				
 				if (matcherBodyLength.find()) {
 					contentLength = Integer.valueOf(currentLine.split(":")[1].trim());
 				}
@@ -112,7 +103,6 @@ public class Server {
 					}
 				}
 			}
-
 			System.out.println(requestString);
 			Optional<String> request = Optional.ofNullable(requestString);
 			return request;
