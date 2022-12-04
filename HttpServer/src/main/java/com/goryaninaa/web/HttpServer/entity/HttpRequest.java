@@ -7,15 +7,15 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.web.HttpServer.json.deserializer.JsonDeserializer;
 import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
-import com.goryaninaa.web.HttpServer.json.deserializer.JsonParser;
 import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 import com.goryaninaa.web.HttpServer.requesthandler.Request;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
 
 public class HttpRequest implements Request {
     private final String request;
-    private final Deserializer parser = new JsonParser();
+    private final Deserializer deserializer = new JsonDeserializer();
     private HttpMethod method;
     private String mapping;
     private Map<String, String> parameters = new HashMap<>();
@@ -67,7 +67,7 @@ public class HttpRequest implements Request {
 		
 		if (headers.containsKey("Content-Type") && headers.get("Content-Type").equals("application/json")) {
 			try {
-				jsonObject = (Optional<T>) Optional.ofNullable(parser.deserialize(object.getClass(), body));
+				jsonObject = (Optional<T>) Optional.ofNullable(deserializer.deserialize(object.getClass(), body));
 			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | InstantiationException | NoSuchFieldException | ClassNotFoundException
 					| JsonFormatException e) {
