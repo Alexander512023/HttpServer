@@ -7,15 +7,15 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.goryaninaa.web.HttpServer.json.parser.JsonFormatException;
-import com.goryaninaa.web.HttpServer.json.parser.JsonParser;
-import com.goryaninaa.web.HttpServer.requesthandler.Parser;
+import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
+import com.goryaninaa.web.HttpServer.json.deserializer.JsonParser;
+import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 import com.goryaninaa.web.HttpServer.requesthandler.Request;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
 
 public class HttpRequest implements Request {
     private final String request;
-    private final Parser parser = new JsonParser();
+    private final Deserializer parser = new JsonParser();
     private HttpMethod method;
     private String mapping;
     private Map<String, String> parameters = new HashMap<>();

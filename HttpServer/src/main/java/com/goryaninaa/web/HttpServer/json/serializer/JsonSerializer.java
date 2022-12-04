@@ -4,6 +4,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +25,14 @@ public class JsonSerializer implements Serializer {
 	}
 
 	private <T> String getStringRepresentation(T object) {
-		Map<String, Type> fieldTypeMap = collectFieldTypeMap(object.getClass());
-		Map<String, String> fieldValueMap = collectFieldValueMap(object, fieldTypeMap);
-
-		return wrap(fieldValueMap);
+		if (object.getClass().isEnum()) {
+			return "\"" + object.toString() + "\"";
+		} else {
+			Map<String, Type> fieldTypeMap = collectFieldTypeMap(object.getClass());
+			Map<String, String> fieldValueMap = collectFieldValueMap(object, fieldTypeMap);
+			
+			return wrap(fieldValueMap);
+		}
 	}
 
 	private <T> Map<String, Type> collectFieldTypeMap(Class<? extends T> clazz) {
@@ -66,13 +73,15 @@ public class JsonSerializer implements Serializer {
 
 			if (type.equals(int.class) || type.equals(double.class) || type.equals(Boolean.class)) {
 				fieldValue = valueOfPrimitive(object, getter);
-			} else if (type.equals(String.class)) {
+			} else if (type.equals(String.class) || type.equals(LocalDate.class) || type.equals(Date.class)
+					|| type.equals(LocalDateTime.class) || type.equals(Integer.class)) {
 				fieldValue = valueOfString(object, getter);
 			} else if (type.equals(List.class)) {
 				fieldValue = valueOfList(object, getter);
 			} else {
 				fieldValue = valueOfObject(object, getter);
 			}
+
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			e.printStackTrace();
@@ -105,7 +114,13 @@ public class JsonSerializer implements Serializer {
 
 	private <T> String valueOfString(T object, Method getter)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		return "\"" + String.valueOf(getter.invoke(object, new Object[0])) + "\"";
+		String value = String.valueOf(getter.invoke(object, new Object[0]));
+		
+		if (value.equals("null")) {
+			return "null";
+		} else {
+			return "\"" + value + "\"";
+		}
 	}
 
 	private <T> String valueOfPrimitive(T object, Method getter)

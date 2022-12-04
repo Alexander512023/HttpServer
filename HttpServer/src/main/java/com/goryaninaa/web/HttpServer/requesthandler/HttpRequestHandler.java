@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import com.goryaninaa.web.HttpServer.json.parser.JsonFormatException;
+import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
@@ -22,12 +22,12 @@ public class HttpRequestHandler implements RequestHandler {
 	private final Map<String, Controller> controllers = new HashMap<>();
 	private final In in;
 	private final Out out;
-	private final Parser parser;
+	private final Deserializer deserializer;
 	
-    public HttpRequestHandler(In in, Out out, Parser parser) {
+    public HttpRequestHandler(In in, Out out, Deserializer parser) {
     	this.in = in;
     	this.out = out;
-    	this.parser = parser;
+    	this.deserializer = parser;
 	}
 
 	public Response handle(String requestString) {
@@ -42,7 +42,7 @@ public class HttpRequestHandler implements RequestHandler {
 			}
 			
 		} catch (IllegalAccessException | InvocationTargetException | RuntimeException | NoSuchMethodException
-				| InstantiationException | NoSuchFieldException | ClassNotFoundException | JsonFormatException e) {
+				| InstantiationException | NoSuchFieldException | ClassNotFoundException e) {
 			e.printStackTrace();
 			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
 		}
@@ -113,7 +113,7 @@ public class HttpRequestHandler implements RequestHandler {
 		if (method.getParameterCount() > 1) {
 			Class<?> clazz = method.getParameterTypes()[1];
 			
-			Object argument = parser.deserialize(clazz, httpRequest.getBody().get());
+			Object argument = deserializer.deserialize(clazz, httpRequest.getBody().get());
 			
 			return Optional.ofNullable((Response) method.invoke(controller, httpRequest, argument));
 		} else {

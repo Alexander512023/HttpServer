@@ -1,6 +1,8 @@
-package com.goryaninaa.web.HttpServer.json.parser;
+package com.goryaninaa.web.HttpServer.json.deserializer;
 
 import java.util.Objects;
+
+import com.goryaninaa.web.HttpServer.json.deserializer.Person;
 
 public class Person {
 	private int id;

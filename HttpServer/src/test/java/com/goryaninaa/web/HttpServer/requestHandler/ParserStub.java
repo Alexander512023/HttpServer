@@ -2,10 +2,10 @@ package com.goryaninaa.web.HttpServer.requestHandler;
 
 import java.lang.reflect.InvocationTargetException;
 
-import com.goryaninaa.web.HttpServer.json.parser.JsonFormatException;
-import com.goryaninaa.web.HttpServer.requesthandler.Parser;
+import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
+import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 
-public class ParserStub implements Parser {
+public class ParserStub implements Deserializer {
 
 	@Override
 	public <T> T deserialize(Class<T> clazz, String jsonToParse) throws NoSuchMethodException, SecurityException,

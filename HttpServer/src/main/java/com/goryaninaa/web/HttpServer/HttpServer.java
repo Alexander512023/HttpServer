@@ -4,12 +4,12 @@ import java.util.List;
 
 import com.goryaninaa.web.HttpServer.entity.IncomingRequest;
 import com.goryaninaa.web.HttpServer.entity.OutgoingResponse;
-import com.goryaninaa.web.HttpServer.json.parser.JsonParser;
+import com.goryaninaa.web.HttpServer.json.deserializer.JsonDeserializer;
 import com.goryaninaa.web.HttpServer.requesthandler.Controller;
+import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 import com.goryaninaa.web.HttpServer.requesthandler.HttpRequestHandler;
 import com.goryaninaa.web.HttpServer.requesthandler.In;
 import com.goryaninaa.web.HttpServer.requesthandler.Out;
-import com.goryaninaa.web.HttpServer.requesthandler.Parser;
 import com.goryaninaa.web.HttpServer.server.RequestHandler;
 import com.goryaninaa.web.HttpServer.server.Server;
 
@@ -19,8 +19,8 @@ public class HttpServer {
 	public HttpServer(String propertiesPath, List<Controller> controllers) {
 		In in = new IncomingRequest();
     	Out out = new OutgoingResponse();
-    	Parser parser = new JsonParser();
-		RequestHandler requestHandler = new HttpRequestHandler(in, out, parser);
+    	Deserializer deserializer = new JsonDeserializer();
+		RequestHandler requestHandler = new HttpRequestHandler(in, out, deserializer);
 		
 		for (Controller controller : controllers) {
 			requestHandler.addController(controller);
