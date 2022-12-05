@@ -1,6 +1,5 @@
 package com.goryaninaa.web.HttpServer.entity;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -8,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.goryaninaa.web.HttpServer.json.deserializer.JsonDeserializer;
-import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
 import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 import com.goryaninaa.web.HttpServer.requesthandler.Request;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
@@ -65,14 +63,7 @@ public class HttpRequest implements Request {
 		Optional<T> jsonObject = Optional.empty();
 		if (headers.containsKey("Content-Type") && headers.get("Content-Type").equals("application/json")
 				|| !method.equals(HttpMethod.GET)) {
-			try {
-				jsonObject = (Optional<T>) Optional.ofNullable(deserializer.deserialize(object.getClass(), body));
-			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | InstantiationException | NoSuchFieldException | ClassNotFoundException
-					| JsonFormatException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Json parsing faild");
-			}
+			jsonObject = (Optional<T>) Optional.ofNullable(deserializer.deserialize(object.getClass(), body));
 		}
 		return jsonObject;
 	}

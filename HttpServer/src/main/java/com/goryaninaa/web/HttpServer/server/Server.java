@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.web.HttpServer.exception.ServerException;
 import com.goryaninaa.web.HttpServer.requesthandler.Response;
 
 public class Server {
@@ -39,14 +40,18 @@ public class Server {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new RuntimeException("Server start failed");
+			throw new ServerException("Server start failed");
 		}
     }
     
-    public void shutdown() throws IOException, InterruptedException {
+    public void shutdown() {
     	started = false;
     	if (!serverSocket.isClosed()) {
-    		serverSocket.close();
+    		try {
+				serverSocket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     	if (!executor.isShutdown()) {
     		executor.shutdownNow();

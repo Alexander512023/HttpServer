@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.web.HttpServer.exception.ClientException;
 import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 
 public class JsonDeserializer implements Deserializer {
@@ -227,7 +228,7 @@ public class JsonDeserializer implements Deserializer {
 		Pattern pattern = Pattern.compile("(?s)\\{(.*?\".+?\".*?:\\s*.+?){" + counter + "}.*?\\}");
 		Matcher matcher = pattern.matcher(jsonString);
 		if (!matcher.find() || counter == 0) {
-			throw new JsonFormatException("Deserializing JSON incorrect format");
+			throw new ClientException("Deserializing JSON incorrect format");
 		}
 	}
 

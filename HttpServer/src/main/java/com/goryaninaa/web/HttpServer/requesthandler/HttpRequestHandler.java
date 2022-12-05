@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
+import com.goryaninaa.web.HttpServer.exception.ClientException;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.HttpMethod;
@@ -38,6 +38,9 @@ public class HttpRequestHandler implements RequestHandler {
 			if (controller.isPresent()) {
 				httpResponse = manage(controller.get(), httpRequest);
 			}
+		} catch (ClientException e) {
+			e.printStackTrace();
+			return out.httpResponseFrom(HttpResponseCode.NOTFOUND);
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
@@ -101,9 +104,7 @@ public class HttpRequestHandler implements RequestHandler {
 			} else {
 				return Optional.ofNullable((Response) method.invoke(controller, httpRequest));
 			}
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | InstantiationException | NoSuchFieldException | ClassNotFoundException
-				| JsonFormatException e) {
+		} catch (IllegalAccessException | InvocationTargetException e) {
 			e.printStackTrace();
 			throw new RuntimeException("Failed to handle request");
 		}

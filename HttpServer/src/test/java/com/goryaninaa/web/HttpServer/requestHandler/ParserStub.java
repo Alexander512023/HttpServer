@@ -2,7 +2,7 @@ package com.goryaninaa.web.HttpServer.requestHandler;
 
 import java.lang.reflect.InvocationTargetException;
 
-import com.goryaninaa.web.HttpServer.json.deserializer.JsonFormatException;
+import com.goryaninaa.web.HttpServer.exception.JsonFormatException;
 import com.goryaninaa.web.HttpServer.requesthandler.Deserializer;
 
 public class ParserStub implements Deserializer {
