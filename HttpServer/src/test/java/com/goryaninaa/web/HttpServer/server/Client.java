@@ -10,14 +10,16 @@ import java.net.UnknownHostException;
 public class Client {
 	private String request;
 	private String response = "";
+	private final int port;
 	
-	public Client() {
+	public Client(int port) {
+		this.port = port;
 	}
 	
 	public void go(String request) {
 		this.request = request;
 		
-		try(Socket clientSocket = new Socket("127.0.0.1", 8000);
+		try(Socket clientSocket = new Socket("127.0.0.1", port);
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 			

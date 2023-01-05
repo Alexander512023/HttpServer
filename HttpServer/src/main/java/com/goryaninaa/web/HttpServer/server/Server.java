@@ -16,22 +16,20 @@ import com.goryaninaa.web.HttpServer.exception.ServerException;
 import com.goryaninaa.web.HttpServer.requesthandler.Response;
 
 public class Server {
-    private int port;
-    private boolean started;
-    private ServerSocket serverSocket;
+    private volatile boolean started;
+    private final ServerSocket serverSocket;
     private final ExecutorService executor;
     private final RequestHandler requestHandler;
 
-    public Server(int port, int threadsNumber, RequestHandler requestHandler) {
-        this.port = port;
+    public Server(int port, int threadsNumber, RequestHandler requestHandler) throws IOException {
         this.requestHandler = requestHandler;
         this.executor = Executors.newFixedThreadPool(threadsNumber);
+        this.serverSocket = new ServerSocket(port);
         started = true;
     }
 
     public void start() {
 		try {
-			this.serverSocket = new ServerSocket(port);
 			while (started) {
 				Socket clientSocket = serverSocket.accept();
 				executor.submit(() -> {
@@ -40,7 +38,7 @@ public class Server {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new ServerException("Server start failed");
+			throw new ServerException("Connection failed");
 		}
     }
     

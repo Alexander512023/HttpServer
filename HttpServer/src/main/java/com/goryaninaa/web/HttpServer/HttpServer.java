@@ -1,5 +1,6 @@
 package com.goryaninaa.web.HttpServer;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.goryaninaa.web.HttpServer.entity.IncomingRequest;
@@ -16,7 +17,7 @@ import com.goryaninaa.web.HttpServer.server.Server;
 public class HttpServer {
 	private final Server server;
 
-	public HttpServer(String propertiesPath, List<Controller> controllers) {
+	public HttpServer(String propertiesPath, List<Controller> controllers) throws IOException {
 		In in = new IncomingRequest();
     	Out out = new OutgoingResponse();
     	Deserializer deserializer = new JsonDeserializer();

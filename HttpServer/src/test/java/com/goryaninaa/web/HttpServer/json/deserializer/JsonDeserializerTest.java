@@ -3,15 +3,13 @@ package com.goryaninaa.web.HttpServer.json.deserializer;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.goryaninaa.web.HttpServer.exception.JsonFormatException;
+import com.goryaninaa.web.HttpServer.exception.ClientException;
 
 public class JsonDeserializerTest {
 
@@ -30,10 +28,7 @@ public class JsonDeserializerTest {
 	}
 	
 	@Test
-	public void testDeserializeListAndFieldObject()
-			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, InstantiationException, NoSuchFieldException, ClassNotFoundException,
-			JsonFormatException, URISyntaxException {
+	public void testDeserializeListAndFieldObject() {
 		
 		Person person1 = new Person(7, "michael.lawson@reqres.in", "Michael", "Lawson", "https://reqres.in/img/faces/7-image.jpg");
 		Person person2 = new Person(8, "lindsay.ferguson@reqres.in", "Lindsay", "Ferguson", "https://reqres.in/img/faces/8-image.jpg");
@@ -54,7 +49,7 @@ public class JsonDeserializerTest {
 	
 	
 	@Test
-	public void testDeserialize() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException, NoSuchFieldException, ClassNotFoundException, JsonFormatException {
+	public void testDeserialize() {
 		Person personConstructor = new Person(7, "michael.lawson@reqres.in", "Michael", "Lawson", "https://reqres.in/img/faces/7-image.jpg");
 		Person personCorrectJson = deserializer.deserialize(Person.class, correctPersonJson);
 		
@@ -63,7 +58,7 @@ public class JsonDeserializerTest {
 	
 	@Test
 	public void testDeserializeCheckIncorrect() {
-		Exception exceptionIncorrect = assertThrows(JsonFormatException.class, () -> {
+		Exception exceptionIncorrect = assertThrows(ClientException.class, () -> {
 			deserializer.deserialize(Person.class, incorrectDataJson);
 		});
 		
