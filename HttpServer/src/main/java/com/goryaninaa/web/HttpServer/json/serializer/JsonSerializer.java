@@ -73,7 +73,7 @@ public class JsonSerializer implements Serializer {
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			e.printStackTrace();
-			throw new RuntimeException("Serialization failed");
+			throw new RuntimeException("Serialization failed", e);
 		}
 		return fieldValue;
 	}

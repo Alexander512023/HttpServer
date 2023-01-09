@@ -32,7 +32,7 @@ public class JsonDeserializer implements Deserializer {
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException e) {
 			e.printStackTrace();
-			throw new RuntimeException("Failed to create instance");
+			throw new RuntimeException("Failed to create instance", e);
 		}
 	}
 
@@ -44,7 +44,7 @@ public class JsonDeserializer implements Deserializer {
 				method.invoke(instance, parameter);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();
-				throw new RuntimeException("Failed to enrich instance with data");
+				throw new RuntimeException("Failed to enrich instance with data", e);
 			}
 		}
 	}
@@ -112,7 +112,7 @@ public class JsonDeserializer implements Deserializer {
 				return Enum.valueOf((Class<? extends Enum>) Class.forName(clazz.getCanonicalName()),
 						String.valueOf(valueString));
 			} catch (ClassNotFoundException e) {
-				throw new RuntimeException("Class not found");
+				throw new RuntimeException("Class not found", e);
 			}
 		} else {
 			return valueString;

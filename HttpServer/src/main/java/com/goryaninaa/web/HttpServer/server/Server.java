@@ -12,6 +12,9 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.goryaninaa.logger.LoggingMech.Logger;
+import com.goryaninaa.logger.LoggingMech.LoggingMech;
+import com.goryaninaa.logger.LoggingMech.StackTraceString;
 import com.goryaninaa.web.HttpServer.exception.ServerException;
 import com.goryaninaa.web.HttpServer.requesthandler.Response;
 
@@ -20,12 +23,14 @@ public class Server {
     private final ServerSocket serverSocket;
     private final ExecutorService executor;
     private final RequestHandler requestHandler;
+    private final Logger logger = LoggingMech.getLogger(this.getClass().getCanonicalName());
 
     public Server(int port, int threadsNumber, RequestHandler requestHandler) throws IOException {
         this.requestHandler = requestHandler;
         this.executor = Executors.newFixedThreadPool(threadsNumber);
         this.serverSocket = new ServerSocket(port);
         started = true;
+        
     }
 
     public void start() {
@@ -37,7 +42,7 @@ public class Server {
 				});
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(StackTraceString.get(e));
 			throw new ServerException("Connection failed");
 		}
     }
@@ -47,17 +52,19 @@ public class Server {
     	if (!serverSocket.isClosed()) {
     		try {
 				serverSocket.close();
+				logger.info("Server shut down correctly");
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(StackTraceString.get(e));
 			}
     	}
     	if (!executor.isShutdown()) {
     		executor.shutdownNow();
+    		logger.info("Server threads completed correctly");
     	}
     }
 
 	private void run(Socket socket) {
-		System.out.println("New connection accepted");
+		logger.info("New connection accepted");
 		try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 				PrintWriter output = new PrintWriter(socket.getOutputStream())) {
 			Optional<String> request = getRequest(input);
@@ -65,11 +72,11 @@ public class Server {
 				String requestString = request.get();
 				Response response = requestHandler.handle(requestString);
 				sendResponse(response, output);
-				System.out.println("Response with code " + response.getCode().getCode() + " was sent");
+				logger.info("Response with code " + response.getCode().getCode() + " was sent");
 			}
 			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error on handling request/n" + StackTraceString.get(e));
 		}
     }
 
@@ -78,7 +85,7 @@ public class Server {
 			while (!input.ready()) {
 				long after = System.currentTimeMillis();
 				if (after - before > 50) {
-					System.out.println("Technical connection handled");
+					logger.debug("Technical connection handled");
 					return Optional.empty();
 				}
 			}
@@ -106,7 +113,7 @@ public class Server {
 					}
 				}
 			}
-			System.out.println(requestString);
+			logger.debug(requestString);
 			Optional<String> request = Optional.ofNullable(requestString);
 			return request;
 	}

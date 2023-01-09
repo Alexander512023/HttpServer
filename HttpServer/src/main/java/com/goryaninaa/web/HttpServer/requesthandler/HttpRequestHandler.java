@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import com.goryaninaa.logger.LoggingMech.Logger;
+import com.goryaninaa.logger.LoggingMech.LoggingMech;
+import com.goryaninaa.logger.LoggingMech.StackTraceString;
 import com.goryaninaa.web.HttpServer.exception.ClientException;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.DeleteMapping;
 import com.goryaninaa.web.HttpServer.requesthandler.annotation.GetMapping;
@@ -23,6 +26,7 @@ public class HttpRequestHandler implements RequestHandler {
 	private final In in;
 	private final Out out;
 	private final Deserializer deserializer;
+	private final Logger logger = LoggingMech.getLogger(this.getClass().getCanonicalName());
 	
     public HttpRequestHandler(In in, Out out, Deserializer parser) {
     	this.in = in;
@@ -39,10 +43,10 @@ public class HttpRequestHandler implements RequestHandler {
 				httpResponse = manage(controller.get(), httpRequest);
 			}
 		} catch (ClientException e) {
-			e.printStackTrace();
+			logger.error(StackTraceString.get(e));
 			return out.httpResponseFrom(HttpResponseCode.NOTFOUND);
 		} catch (RuntimeException e) {
-			e.printStackTrace();
+			logger.error(StackTraceString.get(e));
 			return out.httpResponseFrom(HttpResponseCode.INTERNALSERVERERROR);
 		}
 		if (httpResponse.isPresent()) {
@@ -105,8 +109,8 @@ public class HttpRequestHandler implements RequestHandler {
 				return Optional.ofNullable((Response) method.invoke(controller, httpRequest));
 			}
 		} catch (IllegalAccessException | InvocationTargetException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Failed to handle request");
+			logger.error(StackTraceString.get(e));
+			throw new RuntimeException("Failed to handle request", e);
 		}
 	}
 
@@ -124,6 +128,6 @@ public class HttpRequestHandler implements RequestHandler {
 				return method.getAnnotation(DeleteMapping.class).value();
 			}
 		}
-		return "";
+		throw new IllegalArgumentException("Unsupported Http method");
 	}
 }
