@@ -128,6 +128,6 @@ public class HttpRequestHandler implements RequestHandler {
 				return method.getAnnotation(DeleteMapping.class).value();
 			}
 		}
-		throw new IllegalArgumentException("Unsupported Http method");
+		return "";
 	}
 }

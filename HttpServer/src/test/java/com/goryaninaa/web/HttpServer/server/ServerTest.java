@@ -44,7 +44,7 @@ public class ServerTest {
 	
 	@Test
 	public void serverShouldCorrectlyHandleFourClientSimultaneously() throws InterruptedException, IOException {
-		Server server = new Server(8000, 4, requestHandler);
+		Server server = new Server("8000", "4", requestHandler);
 		new Thread(() -> {
 			server.start();
 		}).start();
@@ -74,7 +74,7 @@ public class ServerTest {
 	
 	@Test
 	public void serverShouldShutdownCorrectly() throws InterruptedException, IOException {
-		Server server = new Server(8001, 4, requestHandler);
+		Server server = new Server("8001", "4", requestHandler);
 		new Thread(() -> {
 			server.start();
 		}).start();

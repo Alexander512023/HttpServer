@@ -25,10 +25,10 @@ public class Server {
     private final RequestHandler requestHandler;
     private final Logger logger = LoggingMech.getLogger(this.getClass().getCanonicalName());
 
-    public Server(int port, int threadsNumber, RequestHandler requestHandler) throws IOException {
+    public Server(String port, String threadsNumber, RequestHandler requestHandler) throws IOException {
         this.requestHandler = requestHandler;
-        this.executor = Executors.newFixedThreadPool(threadsNumber);
-        this.serverSocket = new ServerSocket(port);
+        this.executor = Executors.newFixedThreadPool(Integer.valueOf(threadsNumber));
+        this.serverSocket = new ServerSocket(Integer.valueOf(port));
         started = true;
         
     }
