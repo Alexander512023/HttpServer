@@ -8,5 +8,5 @@ Look at following example:
 3. JSON deserilization;
 4. JSON serialization;
 5. REST API.
-
+# Dependecies
 This module has strong dependency on my another educational module - LoggingMech, so you should add that to your local Maven repository if you want to start and check server.
