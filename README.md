@@ -6,6 +6,7 @@ Look at following example:
 1. Thread management;
 2. Request handling;
 3. JSON deserilization;
-4. JSON serialization.
+4. JSON serialization;
+5. REST API.
 
 This module has strong dependency on my another educational module - LoggingMech, so you should add that to your local Maven repository if you want to start and check server.
