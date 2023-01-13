@@ -4,7 +4,7 @@ Look at following example:
 ![image](https://user-images.githubusercontent.com/122008693/212290444-8c6d49a5-187f-4ab2-be4b-7a2908d695d7.png)
 # Main goals of this project:
 1. Thread management;
-2. Request handling;
+2. Http request handling;
 3. JSON deserilization;
 4. JSON serialization;
 5. REST API.
